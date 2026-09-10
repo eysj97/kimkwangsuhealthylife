@@ -71,6 +71,11 @@ body {
     display: none;
 }
 
+.panel-medicines,
+.panel-nutrition {
+    padding: 0 20px;
+}
+
 #menu-home:checked ~ .view .panel-home,
 #menu-medicines:checked ~ .view .panel-medicines,
 #menu-nutrition:checked ~ .view .panel-nutrition {
@@ -195,6 +200,7 @@ body {
     min-height: 0;
     overflow-y: auto;
     scrollbar-width: none;
+    padding-bottom: 70px;
 }
 
 .view::-webkit-scrollbar {
@@ -353,6 +359,23 @@ body {
     gap: 8px;
 }
 .today .button button{background: var(--primary-light); padding: 4px 8px; border-radius: 12px; font-size: 12px;}
+.today .button button.active{background: var(--primary); color: #fff;}
+
+#rec-results{margin-top: 10px;}
+#rec-results .card{background: #fff; margin-bottom: 8px;}
+.rec-add-btn{
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
 
 .btn-chip {
     border: 1px solid var(--border);
@@ -422,6 +445,17 @@ body {
     color: var(--primary-mid);
 }
 
+.rec-status.muted {
+    background: var(--card);
+    color: var(--text-muted);
+}
+
+.rec-nutrient-tag {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
 /* 면책 안내 배너 */
 .disclaimer {
     font-size: 10px;
@@ -465,9 +499,9 @@ body {
     font-size: 30px;
 }
 
-.tile-bg-1 { background: #E4F1D9; }
-.tile-bg-2 { background: #D7E9EC; }
-.tile-bg-3 { background: #F3E7D6; }
+.tile-bg-1,
+.tile-bg-2,
+.tile-bg-3 { background: var(--card); }
 
 .medicine-tile-label {
     position: absolute;
@@ -527,11 +561,18 @@ body {
     margin-bottom: 16px;
 }
 
+.capture-slot-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
 .capture-slot {
     display: block;
+    flex: 1;
+    min-width: 0;
     border: 1.5px dashed var(--border);
     border-radius: 14px;
-    margin-bottom: 12px;
     overflow: hidden;
     cursor: pointer;
 }
@@ -548,9 +589,12 @@ body {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 110px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
     color: var(--text-muted);
     font-size: 13px;
+    text-align: center;
+    padding: 0 8px;
 }
 
 .capture-slot-inner img {
@@ -686,7 +730,7 @@ body {
 
 .detail-hero {
     position: relative;
-    background: #E3EFE6;
+    background: var(--card);
     border-radius: 0 0 28px 28px;
     min-height: 300px;
     display: flex;
@@ -718,6 +762,9 @@ body {
 
 .detail-back {
     left: 16px;
+    background: none;
+    font-size: 22px;
+    font-weight: 700;
 }
 
 .detail-close {
@@ -801,8 +848,6 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 14px 0;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
     margin-bottom: 18px;
 }
 
@@ -859,7 +904,24 @@ body {
 .detail-view-memo {
     font-size: 13px;
     line-height: 1.7;
-    color: var(--text);
+    color: #fff;
+    background: var(--text-muted);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+}
+
+.detail-view-memo-title {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.detail-field-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 6px;
 }
 
 .detail-submit {
@@ -904,6 +966,62 @@ body {
     padding: 16px 12px 14px;
 }
 
+.nutri-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.nutri-pill {
+    background: var(--card);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+
+.nutri-pill.active {
+    background: var(--primary-mid);
+    color: #fff;
+}
+
+.nutri-stat-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.nutri-stat-tile {
+    flex: 1;
+    background: var(--card);
+    border-radius: 14px;
+    padding: 12px 10px;
+}
+
+.nutri-stat-icon {
+    font-size: 15px;
+}
+
+.nutri-stat-value {
+    font-size: 15px;
+    font-weight: 800;
+    margin-top: 6px;
+}
+
+.nutri-stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.nutrient-bar-value {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text);
+}
+
 .nutrient-bar {
     flex: 1;
     display: flex;
@@ -919,7 +1037,7 @@ body {
     max-width: 56px;
     height: 130px;
     border-radius: 28px;
-    background: var(--primary-light);
+    background: var(--card);
     overflow: hidden;
 }
 
@@ -929,13 +1047,11 @@ body {
     right: 0;
     bottom: 0;
     border-radius: 28px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 8px;
-    color: #fff;
-    font-weight: 800;
-    font-size: 12px;
+    background: var(--text-muted);
+}
+
+.nutrient-bar-fill.active {
+    background: var(--primary-mid);
 }
 
 .nutrient-bar-label {
@@ -1008,8 +1124,8 @@ label.menu {
 }
 
 .menu-home-circle {
-    width: 54px;
-    height: 54px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: #fff;
     display: flex;
@@ -1017,21 +1133,26 @@ label.menu {
     align-items: center;
     justify-content: center;
     gap: 2px;
+    margin-top: -22px;
+}
+
+.menu-home-circle .menu-icon {
+    width: 24px;
+    height: 24px;
 }
 
 /* 플로팅 추가 버튼 */
 .fab {
     position: absolute;
     right: 20px;
-    bottom: 70px;
+    bottom: 82px;
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: #77A415;
-    color: #303030;
+    background: var(--text);
+    color: #fff;
     font-size: 26px;
     border: none;
-    box-shadow: 0 4px 10px rgba(2,81,36,0.35);
     cursor: pointer;
     z-index: 20;
 }

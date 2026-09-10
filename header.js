@@ -41,6 +41,17 @@
         },
     ];
 
+    // ---------- 증상/상태별 추천 영양제 (데모용 샘플 데이터) ----------
+    const RECOMMENDATIONS = {
+        피로: ["비타민B군", "마그네슘"],
+        감기: ["비타민C", "아연"],
+        몸살: ["비타민C", "마그네슘"],
+        소화불량: ["프로바이오틱스", "소화효소제"],
+        음주: ["밀크시슬", "비타민B군"],
+        불면: ["마그네슘", "테아닌"],
+        "관절 통증": ["오메가3", "글루코사민"],
+    };
+
     // ---------- 주간 캘린더: 가로 스크롤로 날짜 이동, 가운데 온 날짜가 자동 선택됨 ----------
     const CALENDAR_RANGE = 14; // 오늘 기준 앞뒤로 렌더링할 일수
 
@@ -293,21 +304,23 @@
                     <button type="button" class="capture-close" data-close>✕</button>
                 </div>
                 <p class="capture-hint">영양제 사진을 촬영해 주세요</p>
-                ${["product", "label"]
-                    .map(
-                        (key) => `
-                <label class="capture-slot${capturedPhotos[key] ? " filled" : ""}" data-slot="${key}">
-                    <input type="file" accept="image/*" capture="environment" hidden>
-                    <div class="capture-slot-inner">
-                        ${
-                            capturedPhotos[key]
-                                ? `<img src="${capturedPhotos[key].url}" alt=""><span class="capture-retake">다시 촬영</span>`
-                                : `<span class="capture-icon">📷</span><span class="capture-label">${key === "product" ? "제품 전체 사진" : "영양 성분표 사진"}</span>`
-                        }
-                    </div>
-                </label>`
-                    )
-                    .join("")}
+                <div class="capture-slot-row">
+                    ${["product", "label"]
+                        .map(
+                            (key) => `
+                    <label class="capture-slot${capturedPhotos[key] ? " filled" : ""}" data-slot="${key}">
+                        <input type="file" accept="image/*" capture="environment" hidden>
+                        <div class="capture-slot-inner">
+                            ${
+                                capturedPhotos[key]
+                                    ? `<img src="${capturedPhotos[key].url}" alt=""><span class="capture-retake">다시 촬영</span>`
+                                    : `<span class="capture-icon">📷</span><span class="capture-label">${key === "product" ? "제품 전체 사진" : "영양 성분표 사진"}</span>`
+                            }
+                        </div>
+                    </label>`
+                        )
+                        .join("")}
+                </div>
                 <button type="button" class="capture-next" data-action="capture-next" ${capturedPhotos.product && capturedPhotos.label ? "" : "disabled"}>다음</button>
             </div>
         `;
@@ -355,7 +368,7 @@
         overlay.innerHTML = `
             <div class="detail-sheet">
                 <div class="detail-hero">
-                    <button type="button" class="detail-icon-btn detail-back" data-action="detail-back">←</button>
+                    <button type="button" class="detail-icon-btn detail-back" data-action="detail-back">&lt;</button>
                     <button type="button" class="detail-icon-btn detail-close" data-close>✕</button>
                     <img class="detail-hero-image" id="detail-hero-image" src="${capturedPhotos.product.url}" alt="">
                     <div class="detail-thumbs">
@@ -435,10 +448,20 @@
             const amount = overlay.querySelector("#d-amount").value.trim();
             const memo = overlay.querySelector("#d-memo").value.trim();
 
-            addMedicineCard({ name, category, dosage, unit, quantity: draftQty, percent, amount, memo, photoUrl: capturedPhotos.product.url });
+            addMedicineCard({
+                name,
+                category,
+                dosage,
+                unit,
+                quantity: draftQty,
+                percent,
+                amount,
+                memo,
+                photoUrl: capturedPhotos.product.url,
+                labelPhotoUrl: capturedPhotos.label.url,
+            });
 
-            // 성공 경로: product.url은 방금 만든 타일의 <img>가 계속 쓰므로 revoke하지 않고 참조만 비움
-            if (capturedPhotos.label) URL.revokeObjectURL(capturedPhotos.label.url);
+            // 성공 경로: product.url / label.url 모두 방금 만든 타일이 계속 참조하므로 revoke하지 않고 참조만 비움
             capturedPhotos = { product: null, label: null };
             closeDetailOverlay();
         });
@@ -446,7 +469,7 @@
 
     const TILE_BG_CLASSES = ["tile-bg-1", "tile-bg-2", "tile-bg-3"];
 
-    function addMedicineCard({ name, category, dosage, unit, quantity, percent, amount, memo, photoUrl }) {
+    function addMedicineCard({ name, category, dosage, unit, quantity, percent, amount, memo, photoUrl, labelPhotoUrl }) {
         const panel = document.querySelector(".panel-medicines");
         if (!panel) return;
         let grid = panel.querySelector(".medicine-grid");
@@ -469,6 +492,7 @@
         tile.dataset.percent = percent || "";
         tile.dataset.amount = amount || "";
         tile.dataset.memo = memo || "";
+        tile.dataset.labelPhoto = labelPhotoUrl || "";
         tile.innerHTML = `
             <div class="medicine-tile-photo ${photoUrl ? "" : bgClass}">
                 ${photoUrl ? `<img src="${photoUrl}" alt="${escapeHtml(name)}">` : `<span class="medicine-tile-placeholder">💊</span>`}
@@ -476,9 +500,14 @@
             <div class="medicine-tile-label">${escapeHtml(label)}</div>
         `;
         grid.appendChild(tile);
+        updateMedicineCount();
+    }
 
+    function updateMedicineCount() {
+        const panel = document.querySelector(".panel-medicines");
+        if (!panel) return;
         const countEl = panel.querySelector(".section-title");
-        if (countEl) countEl.textContent = `내 영양제 (${grid.querySelectorAll(".medicine-tile").length})`;
+        if (countEl) countEl.textContent = `내 영양제 (${panel.querySelectorAll(".medicine-tile").length})`;
     }
 
     // ---------- 내 영양제 타일 클릭 → 상세페이지(hims 스타일) ----------
@@ -492,10 +521,13 @@
         const dosage = tile.dataset.dosage || "1";
         const unit = tile.dataset.unit || "";
         const memo = tile.dataset.memo || "";
+        const labelPhoto = tile.dataset.labelPhoto || "";
         let qty = Number(tile.dataset.qty || 0);
 
         const photoImg = tile.querySelector(".medicine-tile-photo img");
         const photoUrl = photoImg ? photoImg.src : "";
+
+        const heroPhoto = photoUrl || labelPhoto;
 
         const overlay = document.createElement("div");
         overlay.className = "detail-overlay";
@@ -503,15 +535,30 @@
         overlay.innerHTML = `
             <div class="detail-sheet">
                 <div class="detail-hero">
-                    <button type="button" class="detail-icon-btn detail-back" data-close>←</button>
+                    <button type="button" class="detail-icon-btn detail-back" data-close>&lt;</button>
                     ${
-                        photoUrl
-                            ? `<img class="detail-hero-image" src="${photoUrl}" alt="${escapeHtml(name)}">`
+                        heroPhoto
+                            ? `<img class="detail-hero-image" id="detail-view-hero-image" src="${heroPhoto}" alt="${escapeHtml(name)}">`
                             : `<span class="detail-hero-placeholder">💊</span>`
+                    }
+                    ${
+                        photoUrl && labelPhoto
+                            ? `<div class="detail-thumbs">
+                                <button type="button" class="detail-thumb active" data-thumb-src="${photoUrl}">
+                                    <img src="${photoUrl}" alt="">
+                                </button>
+                                <button type="button" class="detail-thumb" data-thumb-src="${labelPhoto}">
+                                    <img src="${labelPhoto}" alt="">
+                                </button>
+                               </div>`
+                            : ""
                     }
                 </div>
                 <div class="detail-body">
                     <h2 class="detail-view-name">${escapeHtml(name)}</h2>
+                    ${category ? `<div class="detail-category-badge">${escapeHtml(category)}</div>` : ""}
+
+                    <div class="detail-field-label">복용 방법</div>
                     <div class="detail-sub-row"><span>1회 ${escapeHtml(dosage)}${escapeHtml(unit)} 복용</span></div>
 
                     <div class="detail-qty-row">
@@ -523,12 +570,26 @@
                         </div>
                     </div>
 
-                    ${category ? `<div class="detail-category-badge">${escapeHtml(category)}</div>` : ""}
-                    ${memo ? `<p class="detail-view-memo">${escapeHtml(memo)}</p>` : ""}
+                    ${
+                        memo
+                            ? `<div class="detail-view-memo">
+                                   <div class="detail-view-memo-title">기타 안내사항</div>
+                                   <p>${escapeHtml(memo)}</p>
+                               </div>`
+                            : ""
+                    }
                 </div>
             </div>
         `;
         host.appendChild(overlay);
+
+        overlay.querySelectorAll(".detail-thumb").forEach((thumb) => {
+            thumb.addEventListener("click", () => {
+                overlay.querySelectorAll(".detail-thumb").forEach((t) => t.classList.remove("active"));
+                thumb.classList.add("active");
+                overlay.querySelector("#detail-view-hero-image").src = thumb.dataset.thumbSrc;
+            });
+        });
 
         overlay.querySelector("[data-close]").addEventListener("click", closeDetailOverlay);
         overlay.querySelector('[data-action="v-dec"]').addEventListener("click", () => {
@@ -578,7 +639,92 @@
         wireLongPressDelete(item, name);
 
         const imgBox = document.querySelector(".today .imgBox");
-        if (imgBox) imgBox.style.display = "none";
+        if (imgBox) imgBox.style.visibility = "hidden";
+    }
+
+    function isAlreadyInTodayList(name) {
+        return Array.from(document.querySelectorAll(".today-item-name")).some((el) => el.textContent === name);
+    }
+
+    function renderRecResults(condition) {
+        const resultsEl = document.getElementById("rec-results");
+        if (!resultsEl) return;
+
+        const nutrients = RECOMMENDATIONS[condition];
+        if (!nutrients) {
+            resultsEl.innerHTML = "";
+            return;
+        }
+
+        const tiles = Array.from(document.querySelectorAll(".medicine-tile"));
+
+        const rowsHtml = nutrients
+            .map((nutrient) => {
+                const owned = tiles.filter((t) => (t.dataset.category || "") === nutrient);
+                if (owned.length === 0) {
+                    return `
+                    <div class="card rec-item-top">
+                        <span class="rec-name">${escapeHtml(nutrient)}</span>
+                        <span class="rec-status muted">등록된 제품 없음</span>
+                    </div>`;
+                }
+                return owned
+                    .map((tile) => {
+                        const productName = tile.dataset.name || "";
+                        const added = isAlreadyInTodayList(productName);
+                        return `
+                        <div class="card rec-item-top">
+                            <span class="rec-name">${escapeHtml(productName)} <span class="rec-nutrient-tag">${escapeHtml(nutrient)}</span></span>
+                            ${
+                                added
+                                    ? `<span class="rec-status safe">✓ 추가됨</span>`
+                                    : `<button type="button" class="rec-add-btn" data-add-name="${escapeHtml(productName)}">+</button>`
+                            }
+                        </div>`;
+                    })
+                    .join("");
+            })
+            .join("");
+
+        resultsEl.innerHTML = rowsHtml;
+
+        resultsEl.querySelectorAll("[data-add-name]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                addTodayItem(btn.dataset.addName);
+                renderRecResults(condition);
+            });
+        });
+    }
+
+    function wireConditionButtons() {
+        document.querySelectorAll(".today .button button[data-condition]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const isActive = btn.classList.contains("active");
+                document.querySelectorAll(".today .button button[data-condition]").forEach((b) => b.classList.remove("active"));
+
+                if (isActive) {
+                    renderRecResults(null);
+                    return;
+                }
+                btn.classList.add("active");
+                renderRecResults(btn.dataset.condition);
+            });
+        });
+    }
+
+    // ---------- 건강상태: 영양소 필터 pill ↔ 차트 막대 하이라이트 ----------
+    function wireNutrientPills() {
+        document.querySelectorAll(".nutri-pill").forEach((pill) => {
+            pill.addEventListener("click", () => {
+                const nutrient = pill.dataset.nutrient;
+
+                document.querySelectorAll(".nutri-pill").forEach((p) => p.classList.toggle("active", p === pill));
+                document.querySelectorAll(".nutrient-bar-fill").forEach((fill) => {
+                    const bar = fill.closest(".nutrient-bar");
+                    fill.classList.toggle("active", bar && bar.dataset.nutrient === nutrient);
+                });
+            });
+        });
     }
 
     function wireLongPressDelete(item, name) {
@@ -690,6 +836,10 @@
         showRandomWaitingMascot();
         const homeMenuRadio = document.getElementById("menu-home");
         if (homeMenuRadio) homeMenuRadio.addEventListener("change", showRandomWaitingMascot);
+
+        wireConditionButtons();
+        updateMedicineCount();
+        wireNutrientPills();
 
         const homeFab = document.querySelector(".panel-home .fab");
         if (homeFab) {

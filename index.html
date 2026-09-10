@@ -88,14 +88,15 @@
                     <div class="tryBox">
                         <div class="title">추천 받기</div>
                         <ul class="button">
-                            <li><button>피로</button></li>
-                            <li><button>감기</button></li>
-                            <li><button>몸살</button></li>
-                            <li><button>소화불량</button></li>
-                            <li><button>음주</button></li>
-                            <li><button>불면</button></li>
-                            <li><button>관절 통증</button></li>
+                            <li><button type="button" data-condition="피로">피로</button></li>
+                            <li><button type="button" data-condition="감기">감기</button></li>
+                            <li><button type="button" data-condition="몸살">몸살</button></li>
+                            <li><button type="button" data-condition="소화불량">소화불량</button></li>
+                            <li><button type="button" data-condition="음주">음주</button></li>
+                            <li><button type="button" data-condition="불면">불면</button></li>
+                            <li><button type="button" data-condition="관절 통증">관절 통증</button></li>
                         </ul>
+                        <div id="rec-results"></div>
                     </div>
                 </div>
 
@@ -131,30 +132,60 @@
                 <div class="disclaimer">최근 7일간 실제로 "복용완료" 체크한 기록만을 바탕으로 한 단순 데모 분석입니다. 실제 영양 상태는 혈액검사 등을 통해 전문가와 상담하세요.</div>
 
                 <div class="section-title">주요 영양소 최근 7일 섭취율</div>
+
+                <div class="nutri-pill-row">
+                    <button type="button" class="nutri-pill active" data-nutrient="비타민C">비타민C</button>
+                    <button type="button" class="nutri-pill" data-nutrient="오메가3">오메가3</button>
+                    <button type="button" class="nutri-pill" data-nutrient="칼슘">칼슘</button>
+                    <button type="button" class="nutri-pill" data-nutrient="마그네슘">마그네슘</button>
+                </div>
+
                 <div class="card nutrient-chart-card">
-                    <div class="nutrient-bar">
+                    <div class="nutrient-bar" data-nutrient="비타민C">
+                        <div class="nutrient-bar-value">71%</div>
                         <div class="nutrient-bar-track">
-                            <div class="nutrient-bar-fill" style="height:71%; background:#025124;">71%</div>
+                            <div class="nutrient-bar-fill active" style="height:71%;"></div>
                         </div>
                         <div class="nutrient-bar-label">비타민C</div>
                     </div>
-                    <div class="nutrient-bar">
+                    <div class="nutrient-bar" data-nutrient="오메가3">
+                        <div class="nutrient-bar-value">43%</div>
                         <div class="nutrient-bar-track">
-                            <div class="nutrient-bar-fill" style="height:43%; background:#0a7a3a;">43%</div>
+                            <div class="nutrient-bar-fill" style="height:43%;"></div>
                         </div>
                         <div class="nutrient-bar-label">오메가3</div>
                     </div>
-                    <div class="nutrient-bar">
+                    <div class="nutrient-bar" data-nutrient="칼슘">
+                        <div class="nutrient-bar-value">100%</div>
                         <div class="nutrient-bar-track">
-                            <div class="nutrient-bar-fill" style="height:100%; background:#4c9a63;">100%</div>
+                            <div class="nutrient-bar-fill" style="height:100%;"></div>
                         </div>
                         <div class="nutrient-bar-label">칼슘</div>
                     </div>
-                    <div class="nutrient-bar">
+                    <div class="nutrient-bar" data-nutrient="마그네슘">
+                        <div class="nutrient-bar-value">14%</div>
                         <div class="nutrient-bar-track">
-                            <div class="nutrient-bar-fill" style="height:14%; background:#7fb894;">14%</div>
+                            <div class="nutrient-bar-fill" style="height:14%;"></div>
                         </div>
                         <div class="nutrient-bar-label">마그네슘</div>
+                    </div>
+                </div>
+
+                <div class="nutri-stat-row">
+                    <div class="nutri-stat-tile">
+                        <span class="nutri-stat-icon">📊</span>
+                        <div class="nutri-stat-value">57%</div>
+                        <div class="nutri-stat-label">평균 섭취율</div>
+                    </div>
+                    <div class="nutri-stat-tile">
+                        <span class="nutri-stat-icon">⬆</span>
+                        <div class="nutri-stat-value">칼슘 100%</div>
+                        <div class="nutri-stat-label">최고 섭취</div>
+                    </div>
+                    <div class="nutri-stat-tile">
+                        <span class="nutri-stat-icon">⚠</span>
+                        <div class="nutri-stat-value">3개</div>
+                        <div class="nutri-stat-label">부족 위험</div>
                     </div>
                 </div>
 
