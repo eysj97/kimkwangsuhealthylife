@@ -60,6 +60,15 @@ body {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
+/* 갤럭시 Z 폴드 메인(펼친) 화면처럼 정사각형에 가까운 화면(가로/세로 비율 0.75 이상)에서는
+   앱 프레임 자체를 더 넓게 잡아서(폼팩터 비율에 맞춰) 좌우 여백을 크게 줄임 */
+@media (min-aspect-ratio: 3/4) {
+    .top {
+        width: 760px;
+        transform: scale(min(calc(100vw / 760px), calc(100vh / 932px)));
+    }
+}
+
 /* ---------- CSS만으로 메뉴 전환 (JS 없음): 숨긴 라디오 + 라벨 버튼 ---------- */
 .menu-radio {
     position: absolute;
@@ -76,6 +85,10 @@ body {
     padding: 0 20px;
 }
 
+.panel-nutrition {
+    padding-top: 14px;
+}
+
 #menu-home:checked ~ .view .panel-home,
 #menu-medicines:checked ~ .view .panel-medicines,
 #menu-nutrition:checked ~ .view .panel-nutrition {
@@ -89,7 +102,6 @@ body {
     font-weight: 700;
 }
 
-#menu-home:checked ~ .menu label[for="menu-home"] .menu-icon,
 #menu-medicines:checked ~ .menu label[for="menu-medicines"] .menu-icon,
 #menu-nutrition:checked ~ .menu label[for="menu-nutrition"] .menu-icon {
     filter: none;
@@ -126,6 +138,14 @@ body {
 
 .calendar-card {
     padding: 24px 0;
+}
+
+#menu-nutrition:checked ~ .header .calendar-card {
+    display: none;
+}
+
+#menu-nutrition:checked ~ .header {
+    padding-bottom: 14px;
 }
 
 .calendar-week {
@@ -214,6 +234,25 @@ body {
     margin: 20px 0 10px;
 }
 
+.nutri-rate-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#nutri-over-section .section-title,
+#nutri-low-section .section-title {
+    color: var(--text);
+}
+
+.nutrient-gap-item.over .gap-warn-icon {
+    color: var(--danger);
+}
+
+.nutrient-gap-item:not(.over) .gap-warn-icon {
+    color: var(--primary-light);
+}
+
 .section-title:first-child {
     margin-top: 4px;
 }
@@ -234,6 +273,21 @@ body {
     padding: 0 16px 24px;
     display: flex;
     justify-content: space-between;
+}
+.boxGrap-inline{
+    background: none;
+    padding: 4px 0 0;
+}
+.boxGrap-inline .lineBasic{
+    width: 38px;
+}
+.boxGrap-inline .lineBasic-track{
+    width: 38px;
+    height: 110px;
+    background: #fff;
+}
+.boxGrap-inline .lineBasic p{
+    color: var(--text-muted);
 }
 .lineBasic{
     width: 60px;
@@ -256,7 +310,7 @@ body {
     right: 0;
     bottom: 0;
     height: 0%;
-    background: var(--primary-mid);
+    background: var(--primary);
     transition: height 0.3s ease;
 }
 .lineBasic p{
@@ -274,7 +328,7 @@ body {
 .today .title{font-size: 18px; font-weight: 600;}
 .today-list{
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 8px;
     margin-top: 14px;
 }
@@ -347,10 +401,22 @@ body {
 .today .imgBox{height: 200px; display: flex; justify-content: center; padding: 50px 0;}
 .today .imgBox img{height: 100%; width: auto; object-fit: contain; transition: opacity 0.2s ease;}
 
+.today .tryBox-wrap{
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    bottom: 82px;
+    z-index: 5;
+}
+
 .today .tryBox{
     background: var(--card);
     padding: 8px 8px;
     border-radius: 8px;
+}
+
+.panel-home{
+    padding-bottom: 100px;
 }
 .today .tryBox .title{font-size: 12px; margin-bottom: 12px;}
 .today .button{
@@ -465,10 +531,15 @@ body {
     line-height: 1.5;
 }
 
+.tryBox-wrap .disclaimer {
+    margin-top: 6px;
+    margin-bottom: 0;
+}
+
 /* 내 영양제 목록 — 3열 정사각형 사진 그리드 */
 .medicine-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 10px;
     margin-bottom: 10px;
 }
@@ -763,8 +834,12 @@ body {
 .detail-back {
     left: 16px;
     background: none;
-    font-size: 22px;
-    font-weight: 700;
+}
+
+.detail-back-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
 }
 
 .detail-close {
@@ -847,8 +922,24 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 0;
+    padding: 14px;
     margin-bottom: 18px;
+}
+
+.detail-qty-row.boxed {
+    background: var(--card);
+    border-radius: 12px;
+    color: var(--text);
+}
+
+.detail-qty-row.boxed .qty-value {
+    color: var(--primary);
+}
+
+.detail-qty-row.boxed .qty-btn {
+    background: #fff;
+    border: 1px solid var(--border);
+    color: var(--primary);
 }
 
 .detail-qty-label {
@@ -892,8 +983,8 @@ body {
 
 .detail-category-badge {
     display: inline-block;
-    background: var(--card);
-    color: var(--primary-dark);
+    background: var(--primary-mid);
+    color: #fff;
     font-size: 12px;
     font-weight: 700;
     padding: 5px 12px;
@@ -904,16 +995,14 @@ body {
 .detail-view-memo {
     font-size: 13px;
     line-height: 1.7;
-    color: #fff;
-    background: var(--text-muted);
-    border-radius: 12px;
-    padding: 12px 14px;
-    margin-bottom: 14px;
+    color: var(--text-muted);
+    margin-bottom: 18px;
 }
 
 .detail-view-memo-title {
     font-size: 12px;
     font-weight: 700;
+    color: var(--text-muted);
     margin-bottom: 4px;
 }
 
@@ -954,6 +1043,7 @@ body {
     min-width: 44px;
     text-align: center;
     font-weight: 700;
+    color: var(--primary);
 }
 
 /* 플로팅 추가 버튼 */
@@ -987,39 +1077,54 @@ body {
     color: #fff;
 }
 
-.nutri-stat-row {
+.nutri-week-nav {
     display: flex;
-    gap: 8px;
-    margin-bottom: 4px;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
 }
 
-.nutri-stat-tile {
+.nutri-week-btn img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    filter: grayscale(1) brightness(1.9);
+}
+
+.nutri-week-btn.flip img {
+    transform: scaleX(-1);
+}
+
+.nutri-week-title {
     flex: 1;
-    background: var(--card);
-    border-radius: 14px;
-    padding: 12px 10px;
-}
-
-.nutri-stat-icon {
-    font-size: 15px;
-}
-
-.nutri-stat-value {
-    font-size: 15px;
+    text-align: center;
+    font-size: 18px;
     font-weight: 800;
-    margin-top: 6px;
-}
-
-.nutri-stat-label {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 2px;
+    color: var(--text);
 }
 
 .nutrient-bar-value {
     font-size: 12px;
     font-weight: 800;
     color: var(--text);
+}
+
+.nutrient-bar-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 26px;
+    justify-content: flex-start;
+}
+
+.nutrient-bar-connector {
+    width: 0;
+    flex: 1;
+    margin-top: 3px;
+    border-left: 1px dashed var(--border);
 }
 
 .nutrient-bar {
@@ -1061,19 +1166,70 @@ body {
     text-align: center;
 }
 
-.nutrient-chip {
-    display: inline-block;
-    background: var(--primary-light);
-    color: var(--primary-mid);
-    font-size: 12px;
-    font-weight: 700;
-    padding: 6px 12px;
-    border-radius: 20px;
-    margin: 3px;
+.nutri-ring-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+}
+
+.nutri-ring-box {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 14px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.nutri-ring {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: conic-gradient(var(--primary) calc(min(var(--pct), 100) * 1%), var(--border) 0);
+}
+
+.nutri-ring.over {
+    background: conic-gradient(var(--danger) calc(min(var(--pct), 100) * 1%), var(--border) 0);
+}
+
+.nutri-ring.low {
+    background: conic-gradient(var(--primary-light) calc(min(var(--pct), 100) * 1%), var(--border) 0);
+}
+
+.nutri-ring::before {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border-radius: 50%;
+    background: var(--card);
+}
+
+.nutri-ring-value {
+    position: relative;
+    z-index: 1;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.nutri-ring-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
 }
 
 .nutrient-gap-item {
     border-left: 3px solid var(--warning);
+}
+
+.nutrient-gap-item.over {
+    border-left: 3px solid var(--danger);
 }
 
 .nutrient-gap-name {
@@ -1127,18 +1283,24 @@ label.menu {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--text-muted);
+    color: #fff;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 2px;
-    margin-top: -22px;
+    margin-top: -54px;
+}
+
+#menu-home:checked ~ .menu label[for="menu-home"] .menu-home-circle {
+    background: var(--primary);
 }
 
 .menu-home-circle .menu-icon {
     width: 24px;
     height: 24px;
+    filter: brightness(0) invert(1);
 }
 
 /* 플로팅 추가 버튼 */

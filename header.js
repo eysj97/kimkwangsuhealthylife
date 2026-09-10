@@ -30,9 +30,9 @@
             info: "적혈구를 만들고 신경 기능을 유지하는 데 필요해요.<br> 채식 위주 식단에서는 부족해지기 쉬운 영양소예요.",
         },
         {
-            key: "zinc",
-            label: "아연",
-            info: "면역 세포가 제 기능을 하도록 돕고,<br> 상처 회복과 세포 분열에도 관여해요.",
+            key: "probiotics",
+            label: "프로바이오틱스",
+            info: "장내 유익균을 늘려 장 건강과 배변 활동에 도움을 줄 수 있고,<br> 면역 기능 유지에도 관여해요.",
         },
         {
             key: "folatE",
@@ -40,6 +40,16 @@
             info: "세포 분열과 혈액 생성에 필요한 비타민B군의 하나로, 특히 임신 중 태아 발달에 중요한 역할을 해요.",
         },
     ];
+
+    // 건강상태 탭 과대/부족 카드에 쓰는 성분별 안내 문구
+    const NUTRITION_HINTS = {
+        vitaminD: { low: "부족하면 뼈가 약해지고 면역력이 떨어질 수 있어요.", over: "과다 섭취 시 고칼슘혈증 등 부작용이 있을 수 있어요." },
+        omega3: { low: "부족하면 혈행 개선 효과를 충분히 기대하기 어려워요.", over: "과다 섭취 시 출혈 위험이 높아질 수 있어요." },
+        magnesium: { low: "부족하면 근육 경련이나 피로감이 심해질 수 있어요.", over: "과다 섭취 시 설사나 복통이 있을 수 있어요." },
+        vitaminB12: { low: "부족하면 빈혈이나 신경계 이상이 생길 수 있어요.", over: "과다 섭취해도 대부분 배출되지만 드물게 피부 트러블이 있을 수 있어요." },
+        probiotics: { low: "부족하면 장내 유익균이 줄어 배변 활동이나 장 건강이 나빠질 수 있어요.", over: "과다 섭취 시 일시적으로 복부 팽만감이나 가스가 생길 수 있어요." },
+        folatE: { low: "부족하면 빈혈이나 태아 발달에 영향을 줄 수 있어요.", over: "과다 섭취 시 비타민B12 결핍이 가려지거나 위장장애가 나타날 수 있어요." },
+    };
 
     // ---------- 증상/상태별 추천 영양제 (데모용 샘플 데이터) ----------
     const RECOMMENDATIONS = {
@@ -368,7 +378,7 @@
         overlay.innerHTML = `
             <div class="detail-sheet">
                 <div class="detail-hero">
-                    <button type="button" class="detail-icon-btn detail-back" data-action="detail-back">&lt;</button>
+                    <button type="button" class="detail-icon-btn detail-back" data-action="detail-back"><img class="detail-back-icon" src="images/icon-return.png" alt="뒤로"></button>
                     <button type="button" class="detail-icon-btn detail-close" data-close>✕</button>
                     <img class="detail-hero-image" id="detail-hero-image" src="${capturedPhotos.product.url}" alt="">
                     <div class="detail-thumbs">
@@ -535,7 +545,7 @@
         overlay.innerHTML = `
             <div class="detail-sheet">
                 <div class="detail-hero">
-                    <button type="button" class="detail-icon-btn detail-back" data-close>&lt;</button>
+                    <button type="button" class="detail-icon-btn detail-back" data-close><img class="detail-back-icon" src="images/icon-return.png" alt="뒤로"></button>
                     ${
                         heroPhoto
                             ? `<img class="detail-hero-image" id="detail-view-hero-image" src="${heroPhoto}" alt="${escapeHtml(name)}">`
@@ -561,8 +571,8 @@
                     <div class="detail-field-label">복용 방법</div>
                     <div class="detail-sub-row"><span>1회 ${escapeHtml(dosage)}${escapeHtml(unit)} 복용</span></div>
 
-                    <div class="detail-qty-row">
-                        <div class="detail-qty-label">현재 재고</div>
+                    <div class="detail-qty-row boxed">
+                        <div class="detail-qty-label">재고</div>
                         <div class="inv-qty-control">
                             <button type="button" class="qty-btn" data-action="v-dec">－</button>
                             <span class="qty-value" id="v-qty-value">${qty}</span>
@@ -605,10 +615,93 @@
     }
 
     // ---------- 오늘의 영양제: + 버튼 → 내 영양제 목록에서 골라 오늘 목록에 추가 ----------
+    // 복용 체크 시 해당 영양소의 헤더 아래 섭취 그래프(boxGrap)를 채워줌
+    function applyNutrientIntake(category, percent, add) {
+        if (!category || !percent) return;
+        const source = NUTRIENT_SOURCES.find((nu) => nu.label === category);
+        if (!source) return;
+        document.querySelectorAll(`.nutrient-fill.${source.key}`).forEach((fillEl) => {
+            const current = parseFloat(fillEl.style.height) || 0;
+            const next = Math.max(0, current + (add ? percent : -percent));
+            fillEl.style.height = `${next}%`;
+        });
+        refreshNutritionAnalysis();
+    }
+
+    // 건강상태 탭의 링 그래프/과대·부족 리스트를 실제 캡슐 그래프 값 기준으로 다시 그림
+    function refreshNutritionAnalysis() {
+        const grid = document.getElementById("nutri-ring-grid");
+        if (!grid) return;
+
+        let total = 0;
+        const overItems = [];
+        const lowItems = [];
+
+        NUTRIENT_SOURCES.forEach((nu) => {
+            const fillEl = document.querySelector(`.nutrient-fill.${nu.key}`);
+            const pct = fillEl ? parseFloat(fillEl.style.height) || 0 : 0;
+            total += pct;
+
+            const box = grid.querySelector(`[data-nutrient-key="${nu.key}"]`);
+            if (box) {
+                const ring = box.querySelector(".nutri-ring");
+                const valueEl = box.querySelector(".nutri-ring-value");
+                ring.style.setProperty("--pct", pct);
+                ring.classList.toggle("over", pct > 100);
+                ring.classList.toggle("low", pct < 50);
+                valueEl.textContent = `${Math.round(pct)}%`;
+            }
+
+            if (pct > 100) overItems.push({ ...nu, pct });
+            else if (pct < 50) lowItems.push({ ...nu, pct });
+        });
+
+        const avgEl = document.getElementById("nutri-rate-avg");
+        if (avgEl) avgEl.textContent = `${Math.round(total / NUTRIENT_SOURCES.length)}%`;
+
+        renderGapList("over", overItems);
+        renderGapList("low", lowItems);
+    }
+
+    function renderGapList(kind, items) {
+        const section = document.getElementById(kind === "over" ? "nutri-over-section" : "nutri-low-section");
+        const list = document.getElementById(kind === "over" ? "nutri-over-list" : "nutri-low-list");
+        if (!section || !list) return;
+
+        section.hidden = items.length === 0;
+        list.innerHTML = items
+            .map((nu) => {
+                const hint = NUTRITION_HINTS[nu.key] ? NUTRITION_HINTS[nu.key][kind] : "";
+                return `
+                <div class="card nutrient-gap-item ${kind === "over" ? "over" : ""}">
+                    <div class="nutrient-gap-name"><span class="gap-warn-icon">⚠</span> ${escapeHtml(nu.label)} ${Math.round(nu.pct)}%</div>
+                    <div class="nutrient-gap-hint">${escapeHtml(hint)}</div>
+                </div>`;
+            })
+            .join("");
+    }
+
+    // 복용 체크 시 해당 영양제의 재고를 1씩 줄이고(취소하면 다시 늘림)
+    function adjustStock(name, add) {
+        const tile = Array.from(document.querySelectorAll(".medicine-tile")).find((t) => t.dataset.name === name);
+        if (!tile) return;
+        const current = Number(tile.dataset.qty || 0);
+        const next = Math.max(0, current + (add ? 1 : -1));
+        tile.dataset.qty = next;
+    }
+
     function wireTodayCheck(btn) {
         btn.addEventListener("click", () => {
             const checked = btn.classList.toggle("checked");
             const timeEl = btn.parentElement.querySelector(".today-check-time");
+            const item = btn.closest(".today-item");
+            const category = item ? item.dataset.category : "";
+            const percent = item ? Number(item.dataset.percent || 0) : 0;
+            const name = item ? item.querySelector(".today-item-name").textContent : "";
+
+            applyNutrientIntake(category, percent, checked);
+            adjustStock(name, !checked);
+
             if (!timeEl) return;
             if (checked) {
                 const now = new Date();
@@ -624,8 +717,15 @@
     function addTodayItem(name) {
         const list = document.querySelector(".today-list");
         if (!list) return;
+
+        const tile = Array.from(document.querySelectorAll(".medicine-tile")).find((t) => t.dataset.name === name);
+        const category = tile ? tile.dataset.category || "" : "";
+        const percent = tile ? tile.dataset.percent || "" : "";
+
         const item = document.createElement("div");
         item.className = "today-item";
+        item.dataset.category = category;
+        item.dataset.percent = percent;
         item.innerHTML = `
             <button type="button" class="today-item-remove" aria-label="삭제">✕</button>
             <span class="today-item-name">${escapeHtml(name)}</span>
@@ -727,6 +827,26 @@
         });
     }
 
+    // ---------- 건강상태: 주차 이동 (표시용, 실제 데이터는 바뀌지 않음) ----------
+    function wireWeekNav() {
+        const titleEl = document.getElementById("nutri-week-title");
+        if (!titleEl) return;
+        let week = 2;
+
+        function render() {
+            titleEl.textContent = `9월 ${week}주차`;
+        }
+
+        document.querySelector('[data-action="week-prev"]').addEventListener("click", () => {
+            week = week <= 1 ? 4 : week - 1;
+            render();
+        });
+        document.querySelector('[data-action="week-next"]').addEventListener("click", () => {
+            week = week >= 4 ? 1 : week + 1;
+            render();
+        });
+    }
+
     function wireLongPressDelete(item, name) {
         const LONG_PRESS_MS = 500;
         let pressTimer = null;
@@ -742,6 +862,10 @@
             e.stopPropagation();
             if (confirm(`'${name}'을(를) 오늘의 영양제 목록에서 삭제할까요?`)) {
                 item.remove();
+
+                const remaining = document.querySelectorAll(".today-item .today-item-remove").length;
+                const imgBox = document.querySelector(".today .imgBox");
+                if (remaining === 0 && imgBox) imgBox.style.visibility = "visible";
             }
         });
 
@@ -840,6 +964,8 @@
         wireConditionButtons();
         updateMedicineCount();
         wireNutrientPills();
+        wireWeekNav();
+        refreshNutritionAnalysis();
 
         const homeFab = document.querySelector(".panel-home .fab");
         if (homeFab) {
