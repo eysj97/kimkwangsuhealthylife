@@ -18,6 +18,30 @@
         window.visualViewport.addEventListener("resize", updateViewportHeightVar);
     }
 
+    // 화면 비율이 안 맞아 .top 양옆에 여백이 생길 때, 그 여백을 실제 헤더(초록)/
+    // 본문(흰색)/하단 네비(회색) 높이에 맞춰 구간별로 칠해서 이어지는 배경처럼 보이게 함.
+    // 탭마다 헤더 높이가 달라서(건강상태 탭은 달력이 없어 더 짧음) 탭 전환 때도 다시 계산함
+    function updateScreenBackdrop() {
+        const backdrop = document.getElementById("screen-backdrop");
+        const header = document.querySelector(".header");
+        const nav = document.querySelector("nav.menu");
+        if (!backdrop || !header || !nav) return;
+
+        const headerBottom = header.getBoundingClientRect().bottom;
+        const navTop = nav.getBoundingClientRect().top;
+        const vh = window.innerHeight;
+        if (vh <= 0) return;
+
+        const headerPct = Math.max(0, Math.min(100, (headerBottom / vh) * 100));
+        const navPct = Math.max(headerPct, Math.min(100, (navTop / vh) * 100));
+
+        backdrop.style.background = `linear-gradient(to bottom, var(--primary) 0 ${headerPct}%, var(--bg) ${headerPct}% ${navPct}%, var(--card) ${navPct}% 100%)`;
+    }
+    window.addEventListener("load", updateScreenBackdrop);
+    window.addEventListener("resize", updateScreenBackdrop);
+    window.addEventListener("orientationchange", updateScreenBackdrop);
+    document.querySelectorAll(".menu-radio").forEach((radio) => radio.addEventListener("change", updateScreenBackdrop));
+
     const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
     // 캡슐 그래프의 각 영양소 막대 정보 (클릭 시 뜨는 설명 팝업에 사용)
@@ -1560,6 +1584,9 @@
             setupGeneralServerPushReminders();
         }
         wirePushToggle();
+
+        updateScreenBackdrop();
+        requestAnimationFrame(updateScreenBackdrop);
     }
 
     if (document.readyState === "loading") {

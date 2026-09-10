@@ -36,11 +36,23 @@ html, body {
 
 body {
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-    background: var(--primary);
+    background: var(--bg);
     color: var(--text);
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* 화면 비율이 안 맞아 .top 양옆으로 여백이 남을 때, 그 여백을 똑같은 회색/초록색으로
+   뭉뚱그리지 않고 실제 그 높이에 뭐가 있는지(헤더=초록/본문=흰색/하단 네비=회색)에
+   맞춰 구간을 나눠 칠해서 이어지는 배경처럼 보이게 함. 정확한 경계는 header.js가
+   헤더/네비의 실제 렌더링 위치를 재서 JS로 채워 넣고, 이 값은 JS가 뜨기 전
+   잠깐 보일 수 있는 대략적인 기본값임 */
+#screen-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(to bottom, var(--primary) 0 14%, var(--bg) 14% 90%, var(--card) 90% 100%);
 }
 
 /* 디자인 기준 크기는 430x932(아이폰 프로맥스 비율)로 고정하고, 비율을 유지한 채
@@ -74,6 +86,9 @@ body {
    무관하게 둥근 모서리 + 그림자를 주는 "기기 미리보기" 카드 느낌을 줌 */
 @media (hover: hover) and (pointer: fine) {
     body {
+        background: #d9dedb;
+    }
+    #screen-backdrop {
         background: #d9dedb;
     }
     .top {
