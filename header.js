@@ -6,16 +6,23 @@
     // 나머지 화면은 여전히 정적 HTML/CSS입니다.
 
     // 모바일 브라우저는 100dvh를 지원 안 하거나(구형 브라우저) 값이 살짝 어긋나는
-    // 경우가 있어서, 실제 보이는 높이(window.innerHeight)를 JS로 직접 재서
-    // --vh100 변수에 저장해둠 — CSS의 100dvh보다 더 확실하게 맞음
+    // 경우가 있어서, 실제 보이는 높이를 JS로 직접 재서 --vh100 변수에 저장해둠.
+    // 카카오톡 등 인앱 브라우저는 자기 UI(주소창/하단 바)가 자리잡는 타이밍이
+    // 늦어서 처음 잰 값이 최종 값과 다를 수 있어, visualViewport를 우선 쓰고
+    // 로드 직후 한동안은 반복해서 다시 재는 방식으로 보정함
+    function getRealViewportHeight() {
+        return (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    }
+
     function updateViewportHeightVar() {
-        document.documentElement.style.setProperty("--vh100", window.innerHeight + "px");
+        document.documentElement.style.setProperty("--vh100", getRealViewportHeight() + "px");
     }
     updateViewportHeightVar();
     window.addEventListener("resize", updateViewportHeightVar);
     window.addEventListener("orientationchange", updateViewportHeightVar);
     if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", updateViewportHeightVar);
+        window.visualViewport.addEventListener("scroll", updateViewportHeightVar);
     }
 
     // 화면 비율이 안 맞아 .top 양옆에 여백이 생길 때, 그 여백을 실제 헤더(초록)/
@@ -29,7 +36,7 @@
 
         const headerBottom = header.getBoundingClientRect().bottom;
         const navTop = nav.getBoundingClientRect().top;
-        const vh = window.innerHeight;
+        const vh = getRealViewportHeight();
         if (vh <= 0) return;
 
         const headerPct = Math.max(0, Math.min(100, (headerBottom / vh) * 100));
@@ -37,10 +44,24 @@
 
         backdrop.style.background = `linear-gradient(to bottom, var(--primary) 0 ${headerPct}%, var(--bg) ${headerPct}% ${navPct}%, var(--card) ${navPct}% 100%)`;
     }
-    window.addEventListener("load", updateScreenBackdrop);
-    window.addEventListener("resize", updateScreenBackdrop);
-    window.addEventListener("orientationchange", updateScreenBackdrop);
+
+    function refreshViewportSizing() {
+        updateViewportHeightVar();
+        updateScreenBackdrop();
+    }
+    window.addEventListener("load", refreshViewportSizing);
+    window.addEventListener("resize", refreshViewportSizing);
+    window.addEventListener("orientationchange", refreshViewportSizing);
     document.querySelectorAll(".menu-radio").forEach((radio) => radio.addEventListener("change", updateScreenBackdrop));
+
+    // 카카오톡/네이버 등 인앱 브라우저는 자체 UI가 자리잡는 데 시간이 걸려서
+    // 로드 직후 크기가 계속 바뀌는 경우가 많아, 처음 2초 동안은 자주 다시 재봄
+    let sizingRetries = 0;
+    const sizingRetryTimer = setInterval(() => {
+        refreshViewportSizing();
+        sizingRetries += 1;
+        if (sizingRetries >= 10) clearInterval(sizingRetryTimer);
+    }, 200);
 
     const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
