@@ -339,7 +339,7 @@ body {
     color: #fff;
 }
 .today .imgBox{height: 200px; display: flex; justify-content: center; padding: 50px 0;}
-.today .imgBox img{transition: opacity 0.2s ease;}
+.today .imgBox img{height: 100%; width: auto; object-fit: contain; transition: opacity 0.2s ease;}
 
 .today .tryBox{
     background: var(--card);
