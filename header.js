@@ -90,9 +90,20 @@
         weekEl.querySelectorAll(".calendar-day").forEach((day) => {
             const offset = Number(day.dataset.offset);
             const dist = Math.abs(offset - centerOffset);
-            day.classList.remove("selected", "dist-1", "dist-2", "dist-3");
-            if (dist === 0) day.classList.add("selected");
-            else if (dist <= 3) day.classList.add("dist-" + dist);
+            day.classList.remove("selected");
+            if (dist === 0) {
+                day.classList.add("selected");
+                day.style.opacity = "";
+                day.style.filter = "";
+            } else {
+                // 오늘 기준 "이번 주"(앞3일~뒤3일)의 가장자리(dist 3)가 가장 흐리고,
+                // 그 지점을 기준으로 더 멀어질수록(=다음/이전 주로 넘어갈수록) 다시 선명해짐
+                const fold = dist <= 3 ? dist : Math.max(0, 6 - dist);
+                const opacity = Math.max(0.35, 0.95 - fold * 0.18);
+                const blur = fold >= 3 ? 1.5 : 0;
+                day.style.opacity = String(opacity);
+                day.style.filter = blur > 0 ? `blur(${blur}px)` : "";
+            }
         });
 
         const centerDate = new Date();
@@ -615,6 +626,7 @@
 
         const name = tile.dataset.name || "";
         const category = tile.dataset.category || "";
+        const amount = tile.dataset.amount || "";
         const dosage = tile.dataset.dosage || "1";
         const unit = tile.dataset.unit || "";
         const memo = tile.dataset.memo || "";
@@ -654,11 +666,13 @@
                 <div class="detail-body">
                     <h2 class="detail-view-name">${escapeHtml(name)}</h2>
                     <div class="detail-category-badges">
-                        ${category
-                            .split(",")
-                            .map((c) => c.trim())
-                            .filter(Boolean)
-                            .map((c) => `<span class="detail-category-badge">${escapeHtml(c)}</span>`)
+                        ${parseAmountList(category, amount)
+                            .map(
+                                ({ label, amount: amt }, i) => `
+                                <button type="button" class="detail-category-badge${amt ? "" : " no-amount"}" data-action="edit-amount" data-index="${i}">
+                                    ${escapeHtml(label)}${amt ? ` ${escapeHtml(amt)}` : ` <span class="badge-add-amount">함량 입력</span>`}
+                                </button>`
+                            )
                             .join("")}
                     </div>
 
@@ -713,6 +727,21 @@
         overlay.querySelector('[data-action="delete-medicine"]').addEventListener("click", () => {
             if (deleteMedicineTile(tile)) closeDetailOverlay();
         });
+
+        overlay.querySelectorAll('[data-action="edit-amount"]').forEach((badge) => {
+            badge.addEventListener("click", () => {
+                const idx = Number(badge.dataset.index);
+                const labels = (tile.dataset.category || "").split(",").map((s) => s.trim()).filter(Boolean);
+                const amounts = (tile.dataset.amount || "").split(",").map((s) => s.trim());
+                while (amounts.length < labels.length) amounts.push("");
+                const input = window.prompt(`${labels[idx]} 함유량을 입력해주세요 (예: 500mg)`, amounts[idx] || "");
+                if (input === null) return;
+                amounts[idx] = input.trim();
+                tile.dataset.amount = amounts.join(",");
+                saveMedicinesToStorage();
+                openMedicineDetailView(tile);
+            });
+        });
     }
 
     // ---------- 오늘의 영양제: + 버튼 → 내 영양제 목록에서 골라 오늘 목록에 추가 ----------
@@ -722,6 +751,12 @@
         const labels = (categoryStr || "").split(",").map((s) => s.trim()).filter(Boolean);
         const percents = (percentStr || "").split(",").map((s) => s.trim());
         return labels.map((label, i) => ({ label, percent: Number(percents[i]) || 0 }));
+    }
+
+    function parseAmountList(categoryStr, amountStr) {
+        const labels = (categoryStr || "").split(",").map((s) => s.trim()).filter(Boolean);
+        const amounts = (amountStr || "").split(",").map((s) => s.trim());
+        return labels.map((label, i) => ({ label, amount: amounts[i] || "" }));
     }
 
     function applyNutrientIntake(categoryStr, percentStr, add) {
@@ -802,9 +837,13 @@
 
     function wireTodayCheck(btn) {
         btn.addEventListener("click", () => {
+            const item = btn.closest(".today-item");
+            if (item && item.classList.contains("show-remove")) {
+                deleteTodayItem(item);
+                return;
+            }
             const checked = btn.classList.toggle("checked");
             const timeEl = btn.parentElement.querySelector(".today-check-time");
-            const item = btn.closest(".today-item");
             const category = item ? item.dataset.category : "";
             const percent = item ? item.dataset.percent : "";
             const name = item ? item.querySelector(".today-item-name").textContent : "";
@@ -836,11 +875,10 @@
         const percent = tile ? tile.dataset.percent || "" : "";
 
         const item = document.createElement("div");
-        item.className = "today-item";
+        item.className = "today-item today-item-removable";
         item.dataset.category = category;
         item.dataset.percent = percent;
         item.innerHTML = `
-            <button type="button" class="today-item-remove" aria-label="삭제">✕</button>
             <span class="today-item-name">${escapeHtml(name)}</span>
             <div class="today-check-group">
                 <span class="today-check-time"></span>
@@ -849,7 +887,7 @@
         `;
         list.appendChild(item);
         wireTodayCheck(item.querySelector(".today-check"));
-        wireLongPressDelete(item, name);
+        wireLongPressDelete(item);
 
         const imgBox = document.querySelector(".today .imgBox");
         if (imgBox) imgBox.style.visibility = "hidden";
@@ -866,7 +904,7 @@
             name: item.querySelector(".today-item-name").textContent,
             checked: item.querySelector(".today-check").classList.contains("checked"),
             time: item.querySelector(".today-check-time").textContent || "",
-            removable: !!item.querySelector(".today-item-remove"),
+            removable: item.classList.contains("today-item-removable"),
         }));
         try {
             localStorage.setItem(TODAY_STORAGE_KEY, JSON.stringify(items));
@@ -894,7 +932,7 @@
                 item = addTodayItem(s.name);
             } else {
                 item = Array.from(document.querySelectorAll(".today-item")).find(
-                    (el) => !el.querySelector(".today-item-remove") && el.querySelector(".today-item-name").textContent === s.name
+                    (el) => !el.classList.contains("today-item-removable") && el.querySelector(".today-item-name").textContent === s.name
                 );
             }
             if (item && s.checked) {
@@ -1017,35 +1055,47 @@
         });
     }
 
-    function wireLongPressDelete(item, name) {
+    function deleteTodayItem(item) {
+        const name = item.querySelector(".today-item-name").textContent;
+        if (!confirm(`'${name}'을(를) 오늘의 영양제 목록에서 삭제할까요?`)) {
+            exitDeleteMode(item);
+            return;
+        }
+        if (item.querySelector(".today-check").classList.contains("checked")) {
+            applyNutrientIntake(item.dataset.category, item.dataset.percent, false);
+        }
+        item.remove();
+
+        const remaining = document.querySelectorAll(".today-item-removable").length;
+        const imgBox = document.querySelector(".today .imgBox");
+        if (remaining === 0 && imgBox) imgBox.style.visibility = "visible";
+
+        saveTodayToStorage();
+    }
+
+    function exitDeleteMode(item) {
+        item.classList.remove("show-remove");
+        const checkBtn = item.querySelector(".today-check");
+        if (checkBtn) checkBtn.textContent = "✓";
+    }
+
+    function wireLongPressDelete(item) {
         const LONG_PRESS_MS = 500;
         let pressTimer = null;
+        const checkBtn = item.querySelector(".today-check");
 
         item.addEventListener("pointerdown", () => {
-            pressTimer = setTimeout(() => item.classList.add("show-remove"), LONG_PRESS_MS);
+            pressTimer = setTimeout(() => {
+                item.classList.add("show-remove");
+                checkBtn.textContent = "✕";
+            }, LONG_PRESS_MS);
         });
         ["pointerup", "pointerleave", "pointercancel"].forEach((evt) => {
             item.addEventListener(evt, () => clearTimeout(pressTimer));
         });
 
-        item.querySelector(".today-item-remove").addEventListener("click", (e) => {
-            e.stopPropagation();
-            if (confirm(`'${name}'을(를) 오늘의 영양제 목록에서 삭제할까요?`)) {
-                if (item.querySelector(".today-check").classList.contains("checked")) {
-                    applyNutrientIntake(item.dataset.category, item.dataset.percent, false);
-                }
-                item.remove();
-
-                const remaining = document.querySelectorAll(".today-item .today-item-remove").length;
-                const imgBox = document.querySelector(".today .imgBox");
-                if (remaining === 0 && imgBox) imgBox.style.visibility = "visible";
-
-                saveTodayToStorage();
-            }
-        });
-
         document.addEventListener("pointerdown", (e) => {
-            if (!item.contains(e.target)) item.classList.remove("show-remove");
+            if (!item.contains(e.target)) exitDeleteMode(item);
         });
     }
 

@@ -190,20 +190,9 @@ body {
 }
 
 /* 가운데(오늘)는 선명하고 양 끝으로 갈수록 흐려지는 효과.
-   블러는 맨 끝(dist-3)에만 살짝 주고, 그 안쪽은 투명도만으로
-   자연스러운 그라데이션 느낌을 줌. */
-.calendar-day.dist-1 {
-    opacity: 0.8;
-}
-
-.calendar-day.dist-2 {
-    opacity: 0.55;
-}
-
-.calendar-day.dist-3 {
-    filter: blur(1.5px);
-    opacity: 0.4;
-}
+   거리별 opacity/blur는 header.js의 updateCalendarSelection()에서
+   인라인 스타일로 계산해 적용함 (화면 폭에 따라 보이는 요일 수가
+   달라져도 다시 선명해지는 지점 없이 계속 흐려지도록). */
 
 .calendar-date-caption {
     text-align: center;
@@ -351,28 +340,6 @@ body {
     font-size: 12px;
     font-weight: 700;
 }
-.today-item-remove{
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--danger);
-    color: #fff;
-    font-size: 10px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease;
-}
-.today-item.show-remove .today-item-remove{
-    opacity: 1;
-    pointer-events: auto;
-}
 .today-check-group{
     display: flex;
     align-items: center;
@@ -399,6 +366,11 @@ body {
 .today-check.checked{
     background: var(--primary);
     border-color: var(--primary);
+    color: #fff;
+}
+.today-item.show-remove .today-check{
+    background: var(--danger);
+    border-color: var(--danger);
     color: #fff;
 }
 .today .imgBox{height: 200px; display: flex; justify-content: center; padding: 50px 0;}
@@ -542,7 +514,7 @@ body {
 /* 내 영양제 목록 — 3열 정사각형 사진 그리드 */
 .medicine-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
     margin-bottom: 10px;
 }
@@ -806,24 +778,26 @@ body {
     position: relative;
     background: var(--card);
     border-radius: 0 0 28px 28px;
-    min-height: 300px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 30px 30px;
+    min-height: 340px;
+    overflow: hidden;
 }
 
 .detail-hero-image {
-    width: 65%;
-    max-width: 220px;
-    max-height: 220px;
-    object-fit: contain;
-    border-radius: 12px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
 }
 
 .detail-icon-btn {
     position: absolute;
     top: 16px;
+    z-index: 2;
     width: 36px;
     height: 36px;
     border-radius: 10px;
@@ -853,6 +827,7 @@ body {
     position: absolute;
     right: 14px;
     bottom: 14px;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -975,6 +950,11 @@ body {
 }
 
 .detail-hero-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 72px;
 }
 
@@ -999,6 +979,19 @@ body {
     font-weight: 700;
     padding: 5px 12px;
     border-radius: 20px;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.detail-category-badge.no-amount {
+    background: var(--card);
+    color: var(--text-muted);
+    border: 1px dashed var(--text-muted);
+}
+
+.badge-add-amount {
+    text-decoration: underline;
 }
 
 .detail-delete-btn {
@@ -1246,7 +1239,11 @@ body {
 }
 
 .nutrient-gap-item.over {
-    border-left: 3px solid var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.nutrient-gap-item:not(.over) {
+    border: 1px solid var(--primary-light);
 }
 
 .nutrient-gap-name {
@@ -1380,4 +1377,29 @@ label.menu {
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
+}
+
+/* 갤럭시 Z 폴드 펼친 화면처럼 넓어진 화면에서, 막대/링 그래프 간격이
+   화면 폭만큼 과하게 벌어지지 않도록 간격을 줄이고 가운데 정렬함 */
+@media (min-aspect-ratio: 3/4) {
+    .boxGrap {
+        justify-content: center;
+        gap: 32px;
+    }
+
+    .boxGrap:not(.boxGrap-inline) .lineBasic,
+    .boxGrap:not(.boxGrap-inline) .lineBasic-track {
+        width: 76px;
+    }
+
+    .nutri-ring-grid {
+        grid-template-columns: repeat(6, 130px);
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .nutri-ring-grid .nutri-ring {
+        width: 74px;
+        height: 74px;
+    }
 }
