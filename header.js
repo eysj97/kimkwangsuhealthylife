@@ -272,89 +272,6 @@
         }
     }
 
-    // 영양제 상세페이지에서 "매일 복용 알림 캘린더에 추가"로 설정한 시간들.
-    // 이 탭이 열려 있을 때 그 시간이 되면 위 알림과 같은 방식으로 해당 영양제 이름으로 알려줌
-    const MEDICINE_REMINDERS_KEY = "gwangja_medicine_reminders_v1";
-
-    function loadMedicineReminders() {
-        try {
-            const raw = localStorage.getItem(MEDICINE_REMINDERS_KEY);
-            return raw ? JSON.parse(raw) : [];
-        } catch (e) {
-            return [];
-        }
-    }
-
-    function saveMedicineReminder(name, hour, minute) {
-        const list = loadMedicineReminders().filter((r) => r.name !== name);
-        list.push({ name, hour, minute });
-        try {
-            localStorage.setItem(MEDICINE_REMINDERS_KEY, JSON.stringify(list));
-        } catch (e) {
-            // 저장 용량 초과 등은 조용히 무시
-        }
-    }
-
-    function fireMedicineReminderNotification(name) {
-        if (!("Notification" in window) || Notification.permission !== "granted") return;
-        new Notification(`💊 ${name} 복용하세요`, { body: "지금 복용할 시간이에요." });
-    }
-
-    // ---------- 서버 푸시 알림: 앱이 완전히 꺼져 있어도 잠금화면에 알림이 뜨게 함.
-    // /api/subscribe + /api/schedule-reminder(QStash 예약)가 필요하며, 서버 쪽
-    // 환경변수(Upstash Redis/QStash, VAPID 키)가 아직 설정 안 됐으면 조용히 실패함 ----------
-    const VAPID_PUBLIC_KEY = "BCGrncozgG5xf69AUyHR38yr11hUrIQF0JvMuDoYE2BY65oWSXfmzNFfol2nStq7QdxcBbsVHm6vQZPddvEh3hM";
-    const PUSH_USER_ID_KEY = "gwangja_push_user_id";
-
-    function getOrCreatePushUserId() {
-        let id = localStorage.getItem(PUSH_USER_ID_KEY);
-        if (!id) {
-            id = "u_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
-            localStorage.setItem(PUSH_USER_ID_KEY, id);
-        }
-        return id;
-    }
-
-    function urlBase64ToUint8Array(base64String) {
-        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-        const rawData = atob(base64);
-        return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
-    }
-
-    // 잠금화면 알림까지 받으려면 서버에 구독 등록 + 예약이 모두 성공해야 하므로,
-    // 실패해도 조용히 넘어가고(탭이 열려있을 때 뜨는 로컬 알림은 이미 별도로 동작함) 콘솔에만 남김
-    async function setupServerPushReminder(name, hour, minute) {
-        try {
-            if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-            const registration = await navigator.serviceWorker.ready;
-
-            let subscription = await registration.pushManager.getSubscription();
-            if (!subscription) {
-                subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-                });
-            }
-
-            const userId = getOrCreatePushUserId();
-
-            await fetch("/api/subscribe", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId, subscription }),
-            });
-
-            await fetch("/api/schedule-reminder", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId, name, hour, minute }),
-            });
-        } catch (err) {
-            console.warn("서버 푸시 알림 설정에 실패했어요(서버 설정이 아직 안 됐을 수 있어요):", err);
-        }
-    }
-
     function checkReminders() {
         const now = new Date();
         const dateKey = localDateKey(now);
@@ -367,16 +284,6 @@
             localStorage.setItem(firedKey, "1");
 
             fireReminderNotification(reminder.files);
-        });
-
-        loadMedicineReminders().forEach((reminder, index) => {
-            if (now.getHours() !== reminder.hour || now.getMinutes() !== reminder.minute) return;
-
-            const firedKey = REMINDER_FIRED_KEY_PREFIX + "med_" + index + "_" + dateKey;
-            if (localStorage.getItem(firedKey)) return;
-            localStorage.setItem(firedKey, "1");
-
-            fireMedicineReminderNotification(reminder.name);
         });
     }
 
@@ -596,53 +503,6 @@
             reader.onerror = reject;
             reader.readAsDataURL(file);
         });
-    }
-
-    // ---------- 복용 알림을 기기 캘린더 앱에 추가: .ics 파일을 만들어 다운로드함.
-    // 앱 자체에 푸시 알림 기능은 없지만, 캘린더 앱(구글/삼성/애플 캘린더 등)에
-    // 매일 반복되는 일정으로 등록해두면 그 캘린더 앱이 알림을 대신 띄워줌 ----------
-    function pad2(n) {
-        return String(n).padStart(2, "0");
-    }
-
-    function downloadReminderIcsFile(name, dosage, unit, hour, minute) {
-        const now = new Date();
-        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
-        const end = new Date(start.getTime() + 15 * 60 * 1000);
-        const toLocal = (d) => `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}T${pad2(d.getHours())}${pad2(d.getMinutes())}00`;
-        const uid = `gwangja-${Date.now()}@geongwangja`;
-
-        const ics = [
-            "BEGIN:VCALENDAR",
-            "VERSION:2.0",
-            "PRODID:-//건광자//복용 알림//KO",
-            "CALSCALE:GREGORIAN",
-            "BEGIN:VEVENT",
-            `UID:${uid}`,
-            `DTSTAMP:${toLocal(now)}Z`,
-            `DTSTART:${toLocal(start)}`,
-            `DTEND:${toLocal(end)}`,
-            "RRULE:FREQ=DAILY",
-            `SUMMARY:💊 ${name} 복용`,
-            `DESCRIPTION:1회 ${dosage}${unit} 복용 알림 (건광자 앱에서 추가됨)`,
-            "BEGIN:VALARM",
-            "TRIGGER:-PT0M",
-            "ACTION:DISPLAY",
-            `DESCRIPTION:${name} 복용 시간이에요`,
-            "END:VALARM",
-            "END:VEVENT",
-            "END:VCALENDAR",
-        ].join("\r\n");
-
-        const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${name}-복용알림.ics`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     // ---------- 성분표 사진 자동 스캔(OCR): Tesseract.js로 글자를 읽어서
@@ -910,6 +770,7 @@
         const amount = tile.dataset.amount || "";
         const dosage = tile.dataset.dosage || "1";
         const unit = tile.dataset.unit || "";
+        const expiry = tile.dataset.expiry || "";
         const memo = tile.dataset.memo || "";
         const labelPhoto = tile.dataset.labelPhoto || "";
         let qty = Number(tile.dataset.qty || 0);
@@ -960,6 +821,11 @@
                     <div class="detail-field-label">복용 방법</div>
                     <div class="detail-sub-row"><span>1회 ${escapeHtml(dosage)}${escapeHtml(unit)} 복용</span></div>
 
+                    <div class="detail-field-label">유통기한</div>
+                    <button type="button" class="detail-sub-row detail-expiry-row" data-action="edit-expiry">
+                        <span>${expiry ? escapeHtml(expiry) : '<span class="badge-add-amount">유통기한 입력</span>'}</span>
+                    </button>
+
                     <div class="detail-qty-row boxed">
                         <div class="detail-qty-label">재고</div>
                         <div class="inv-qty-control">
@@ -978,7 +844,6 @@
                             : ""
                     }
 
-                    <button type="button" class="detail-calendar-btn" data-action="add-to-calendar">📅 매일 복용 알림 캘린더에 추가</button>
                     <button type="button" class="detail-delete-btn" data-action="delete-medicine">이 영양제 삭제</button>
                 </div>
             </div>
@@ -1010,27 +875,6 @@
             if (deleteMedicineTile(tile)) closeDetailOverlay();
         });
 
-        overlay.querySelector('[data-action="add-to-calendar"]').addEventListener("click", () => {
-            const timeInput = window.prompt("매일 몇 시에 알림을 받을까요? (예: 09:00)", "09:00");
-            if (timeInput === null) return;
-            const match = timeInput.trim().match(/^(\d{1,2}):(\d{2})$/);
-            if (!match) {
-                alert("시간 형식이 올바르지 않아요. 09:00 처럼 입력해주세요.");
-                return;
-            }
-            const hour = Number(match[1]);
-            const minute = Number(match[2]);
-            downloadReminderIcsFile(name, dosage, unit, hour, minute);
-            saveMedicineReminder(name, hour, minute);
-            if ("Notification" in window && Notification.permission !== "granted") {
-                Notification.requestPermission().then((permission) => {
-                    if (permission === "granted") setupServerPushReminder(name, hour, minute);
-                });
-            } else {
-                setupServerPushReminder(name, hour, minute);
-            }
-        });
-
         overlay.querySelectorAll('[data-action="edit-amount"]').forEach((badge) => {
             badge.addEventListener("click", () => {
                 const idx = Number(badge.dataset.index);
@@ -1044,6 +888,14 @@
                 saveMedicinesToStorage();
                 openMedicineDetailView(tile);
             });
+        });
+
+        overlay.querySelector('[data-action="edit-expiry"]').addEventListener("click", () => {
+            const input = window.prompt("유통기한을 입력해주세요 (예: 2027-03-15)", tile.dataset.expiry || "");
+            if (input === null) return;
+            tile.dataset.expiry = input.trim();
+            saveMedicinesToStorage();
+            openMedicineDetailView(tile);
         });
     }
 

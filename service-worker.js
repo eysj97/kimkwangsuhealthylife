@@ -1,5 +1,5 @@
-// 건광자 서비스 워커: 오프라인에서도 앱 껍데기(HTML/CSS/JS)가 뜨도록 캐싱만 담당.
-// 실제 서버 푸시 알림은 아직 없음 — 이건 어디까지나 "설치형 앱처럼 켜지는" 용도.
+// 건광자 서비스 워커: 오프라인에서도 앱 껍데기(HTML/CSS/JS)가 뜨도록 캐싱하고,
+// 서버(/api/send-push)가 보낸 푸시 알림을 받아 화면에 띄우는 역할도 함.
 const CACHE_NAME = "geongwangja-v1";
 const CORE_ASSETS = ["/", "/index.html", "/style.css", "/header.js", "/manifest.json"];
 
@@ -47,7 +47,8 @@ self.addEventListener("push", (event) => {
     event.waitUntil(
         self.registration.showNotification(payload.title, {
             body: payload.body,
-            icon: "images/app-icon.png",
+            icon: payload.icon || "images/app-icon.png",
+            image: payload.image,
             badge: "images/app-icon.png",
         })
     );
