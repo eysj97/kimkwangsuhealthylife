@@ -1578,4 +1578,82 @@ label.menu {
         width: 74px;
         height: 74px;
     }
+
+    .today-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 갤럭시 Z 폴드 펼친 화면 등 넓은 화면에서는 전체적으로 글자 크기를 2px씩 키움 */
+@media (min-aspect-ratio: 3/4) {
+    .header .logo { font-size: calc(26px + 2px); }
+    .calendar-day { font-size: calc(16px + 2px); }
+    .calendar-date-caption { font-size: calc(18px + 2px); }
+    .section-title { font-size: calc(15px + 2px); }
+    .lineBasic p { font-size: calc(10px + 2px); }
+    .push-permission-sheet .push-permission-icon { font-size: calc(32px + 2px); }
+    .push-permission-sheet h3 { font-size: calc(17px + 2px); }
+    .push-permission-sheet p { font-size: calc(13px + 2px); }
+    .push-permission-sheet-actions button { font-size: calc(14px + 2px); }
+    .today .title { font-size: calc(18px + 2px); }
+    .today-item-name { font-size: calc(12px + 2px); }
+    .today-check-time { font-size: calc(12px + 2px); }
+    .today-check { font-size: calc(14px + 2px); }
+    .tryBox .title { font-size: calc(12px + 2px); }
+    .button button { font-size: calc(12px + 2px); }
+    .rec-add-btn { font-size: calc(15px + 2px); }
+    .btn-chip { font-size: calc(12px + 2px); }
+    .icon-btn { font-size: calc(15px + 2px); }
+    .condition-select { font-size: calc(14px + 2px); }
+    .rec-name { font-size: calc(14px + 2px); }
+    .rec-status { font-size: calc(11px + 2px); }
+    .rec-nutrient-tag { font-size: calc(11px + 2px); }
+    .disclaimer { font-size: calc(10px + 2px); }
+    .push-toggle-row { font-size: calc(13px + 2px); }
+    .medicine-tile-placeholder { font-size: calc(30px + 2px); }
+    .medicine-tile-label { font-size: calc(12px + 2px); }
+    .capture-header span { font-size: calc(16px + 2px); }
+    .capture-close { font-size: calc(16px + 2px); }
+    .capture-hint { font-size: calc(12px + 2px); }
+    .capture-slot-inner { font-size: calc(13px + 2px); }
+    .capture-icon { font-size: calc(24px + 2px); }
+    .capture-retake { font-size: calc(11px + 2px); }
+    .capture-next { font-size: calc(15px + 2px); }
+    .picker-search { font-size: calc(13px + 2px); }
+    .picker-row-photo { font-size: calc(20px + 2px); }
+    .picker-row-name { font-size: calc(14px + 2px); }
+    .picker-row-percent { font-size: calc(17px + 2px); }
+    .picker-row-amount { font-size: calc(10px + 2px); }
+    .picker-empty { font-size: calc(13px + 2px); }
+    .detail-icon-btn { font-size: calc(16px + 2px); }
+    .detail-name-input { font-size: calc(24px + 2px); }
+    .detail-sub-row { font-size: calc(13px + 2px); }
+    .detail-sub-input { font-size: calc(13px + 2px); }
+    .detail-sub-row select { font-size: calc(13px + 2px); }
+    .detail-qty-label { font-size: calc(14px + 2px); }
+    .detail-category-input { font-size: calc(13px + 2px); }
+    .ocr-scan-status { font-size: calc(12px + 2px); }
+    .detail-desc-textarea { font-size: calc(13px + 2px); }
+    .detail-hero-placeholder { font-size: calc(72px + 2px); }
+    .detail-view-name { font-size: calc(24px + 2px); }
+    .detail-category-badge { font-size: calc(12px + 2px); }
+    .detail-delete-btn { font-size: calc(13px + 2px); }
+    .detail-view-memo { font-size: calc(13px + 2px); }
+    .detail-view-memo-title { font-size: calc(12px + 2px); }
+    .detail-field-label { font-size: calc(12px + 2px); }
+    .detail-submit { font-size: calc(15px + 2px); }
+    .qty-btn { font-size: calc(16px + 2px); }
+    .nutri-pill { font-size: calc(12px + 2px); }
+    .nutri-week-title { font-size: calc(18px + 2px); }
+    .nutrient-bar-value { font-size: calc(12px + 2px); }
+    .nutrient-bar-label { font-size: calc(11px + 2px); }
+    .nutri-ring-value { font-size: calc(13px + 2px); }
+    .nutri-ring-label { font-size: calc(11px + 2px); }
+    .nutrient-gap-name { font-size: calc(14px + 2px); }
+    .nutrient-gap-hint { font-size: calc(12px + 2px); }
+    label.menu { font-size: calc(11px + 2px); }
+    .fab { font-size: calc(26px + 2px); }
+    .nutrient-info-sheet h3 { font-size: calc(17px + 2px); }
+    .nutrient-info-sheet p { font-size: calc(13px + 2px); }
+    .nutrient-info-sheet button { font-size: calc(14px + 2px); }
 }
