@@ -52,7 +52,12 @@ body {
     position: fixed;
     inset: 0;
     z-index: -1;
-    background: linear-gradient(to bottom, var(--primary) 0 14%, var(--bg) 14% 90%, var(--card) 90% 100%);
+    background: linear-gradient(
+        to bottom,
+        var(--primary) 0 var(--backdrop-header-pct, 14%),
+        var(--bg) var(--backdrop-header-pct, 14%) var(--backdrop-nav-pct, 90%),
+        var(--card) var(--backdrop-nav-pct, 90%) 100%
+    );
 }
 
 /* 디자인 기준 크기는 430x932(아이폰 프로맥스 비율)로 고정하고, 비율을 유지한 채

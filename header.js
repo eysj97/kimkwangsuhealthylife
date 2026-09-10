@@ -42,7 +42,10 @@
         const headerPct = Math.max(0, Math.min(100, (headerBottom / vh) * 100));
         const navPct = Math.max(headerPct, Math.min(100, (navTop / vh) * 100));
 
-        backdrop.style.background = `linear-gradient(to bottom, var(--primary) 0 ${headerPct}%, var(--bg) ${headerPct}% ${navPct}%, var(--card) ${navPct}% 100%)`;
+        // background를 통째로 인라인으로 넣으면 데스크톱용 CSS 오버라이드(고정 회색)보다
+        // 항상 우선해버려서, 대신 CSS 변수만 채워두고 실제 배경색 적용은 CSS가 하도록 함
+        backdrop.style.setProperty("--backdrop-header-pct", headerPct + "%");
+        backdrop.style.setProperty("--backdrop-nav-pct", navPct + "%");
     }
 
     function refreshViewportSizing() {
