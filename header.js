@@ -300,6 +300,61 @@
         new Notification(`💊 ${name} 복용하세요`, { body: "지금 복용할 시간이에요." });
     }
 
+    // ---------- 서버 푸시 알림: 앱이 완전히 꺼져 있어도 잠금화면에 알림이 뜨게 함.
+    // /api/subscribe + /api/schedule-reminder(QStash 예약)가 필요하며, 서버 쪽
+    // 환경변수(Upstash Redis/QStash, VAPID 키)가 아직 설정 안 됐으면 조용히 실패함 ----------
+    const VAPID_PUBLIC_KEY = "BCGrncozgG5xf69AUyHR38yr11hUrIQF0JvMuDoYE2BY65oWSXfmzNFfol2nStq7QdxcBbsVHm6vQZPddvEh3hM";
+    const PUSH_USER_ID_KEY = "gwangja_push_user_id";
+
+    function getOrCreatePushUserId() {
+        let id = localStorage.getItem(PUSH_USER_ID_KEY);
+        if (!id) {
+            id = "u_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+            localStorage.setItem(PUSH_USER_ID_KEY, id);
+        }
+        return id;
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const rawData = atob(base64);
+        return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+    }
+
+    // 잠금화면 알림까지 받으려면 서버에 구독 등록 + 예약이 모두 성공해야 하므로,
+    // 실패해도 조용히 넘어가고(탭이 열려있을 때 뜨는 로컬 알림은 이미 별도로 동작함) 콘솔에만 남김
+    async function setupServerPushReminder(name, hour, minute) {
+        try {
+            if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+            const registration = await navigator.serviceWorker.ready;
+
+            let subscription = await registration.pushManager.getSubscription();
+            if (!subscription) {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+                });
+            }
+
+            const userId = getOrCreatePushUserId();
+
+            await fetch("/api/subscribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId, subscription }),
+            });
+
+            await fetch("/api/schedule-reminder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId, name, hour, minute }),
+            });
+        } catch (err) {
+            console.warn("서버 푸시 알림 설정에 실패했어요(서버 설정이 아직 안 됐을 수 있어요):", err);
+        }
+    }
+
     function checkReminders() {
         const now = new Date();
         const dateKey = localDateKey(now);
@@ -967,8 +1022,12 @@
             const minute = Number(match[2]);
             downloadReminderIcsFile(name, dosage, unit, hour, minute);
             saveMedicineReminder(name, hour, minute);
-            if ("Notification" in window && Notification.permission === "default") {
-                Notification.requestPermission();
+            if ("Notification" in window && Notification.permission !== "granted") {
+                Notification.requestPermission().then((permission) => {
+                    if (permission === "granted") setupServerPushReminder(name, hour, minute);
+                });
+            } else {
+                setupServerPushReminder(name, hour, minute);
             }
         });
 

@@ -35,6 +35,24 @@ self.addEventListener("fetch", (event) => {
     );
 });
 
+// 서버(/api/send-push)가 보낸 푸시를 받아 알림으로 띄움. 앱이 꺼져 있어도 서비스 워커가
+// 깨어나서 처리하기 때문에(브라우저/OS가 지원하는 한) 잠금화면에도 뜰 수 있음.
+self.addEventListener("push", (event) => {
+    let payload = { title: "💊 영양제를 복용하세요", body: "지금 복용할 시간이에요." };
+    try {
+        if (event.data) payload = event.data.json();
+    } catch (e) {
+        // JSON이 아니면 기본 문구 사용
+    }
+    event.waitUntil(
+        self.registration.showNotification(payload.title, {
+            body: payload.body,
+            icon: "images/app-icon.png",
+            badge: "images/app-icon.png",
+        })
+    );
+});
+
 self.addEventListener("notificationclick", (event) => {
     event.notification.close();
     event.waitUntil(
