@@ -1403,10 +1403,10 @@
     }
 
     function wireConditionButtons() {
-        document.querySelectorAll(".today .button button[data-condition]").forEach((btn) => {
+        document.querySelectorAll("button[data-condition]").forEach((btn) => {
             btn.addEventListener("click", () => {
                 const isActive = btn.classList.contains("active");
-                document.querySelectorAll(".today .button button[data-condition]").forEach((b) => b.classList.remove("active"));
+                document.querySelectorAll("button[data-condition]").forEach((b) => b.classList.remove("active"));
 
                 if (isActive) {
                     renderRecResults(null);

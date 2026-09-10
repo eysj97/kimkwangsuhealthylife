@@ -409,15 +409,11 @@ body {
 .home-top{
     flex-shrink: 0;
 }
+/* 추천받기 박스 자체는 처음 위치에서 움직이지 않고, 결과 목록(#rec-results)만
+   내부적으로 스크롤되도록 함(위 max-height 참고) */
 .home-scroll{
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    scrollbar-width: none;
+    flex-shrink: 0;
     padding: 0 20px 100px;
-}
-.home-scroll::-webkit-scrollbar{
-    display: none;
 }
 
 .today{
@@ -497,7 +493,15 @@ body {
 .button button{background: var(--primary-light); padding: 4px 8px; border-radius: 12px; font-size: 12px;}
 .button button.active{background: var(--primary); color: #fff;}
 
-#rec-results{margin-top: 10px;}
+#rec-results{
+    margin-top: 10px;
+    max-height: 220px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+#rec-results::-webkit-scrollbar{
+    display: none;
+}
 #rec-results .card{background: #fff; margin-bottom: 8px;}
 .rec-add-btn{
     width: 26px;
