@@ -27,12 +27,23 @@
 
     // 화면 비율이 안 맞아 .top 양옆에 여백이 생길 때, 그 여백을 실제 헤더(초록)/
     // 본문(흰색)/하단 네비(회색) 높이에 맞춰 구간별로 칠해서 이어지는 배경처럼 보이게 함.
-    // 탭마다 헤더 높이가 달라서(건강상태 탭은 달력이 없어 더 짧음) 탭 전환 때도 다시 계산함
+    // 탭마다 헤더 높이가 달라서(건강상태 탭은 달력이 없어 더 짧음) 탭 전환 때도 다시 계산함.
+    // 마우스 쓰는 데스크톱(카드 미리보기 모드)에서는 이 구간별 배경 대신 CSS에 정의된
+    // 고정 회색을 그대로 써야 해서, 거기서는 인라인 스타일을 아예 건드리지 않고 비워둠
+    // (var()를 그라데이션 위치 값으로 쓰면 일부 브라우저에서 아예 안 그려지는 문제가 있어
+    // CSS 변수 대신 계산된 그라데이션 문자열을 직접 넣는 방식으로 되돌림)
+    const isDesktopCardMode = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
     function updateScreenBackdrop() {
         const backdrop = document.getElementById("screen-backdrop");
         const header = document.querySelector(".header");
         const nav = document.querySelector("nav.menu");
         if (!backdrop || !header || !nav) return;
+
+        if (isDesktopCardMode()) {
+            backdrop.style.background = "";
+            return;
+        }
 
         const headerBottom = header.getBoundingClientRect().bottom;
         const navTop = nav.getBoundingClientRect().top;
@@ -42,10 +53,7 @@
         const headerPct = Math.max(0, Math.min(100, (headerBottom / vh) * 100));
         const navPct = Math.max(headerPct, Math.min(100, (navTop / vh) * 100));
 
-        // background를 통째로 인라인으로 넣으면 데스크톱용 CSS 오버라이드(고정 회색)보다
-        // 항상 우선해버려서, 대신 CSS 변수만 채워두고 실제 배경색 적용은 CSS가 하도록 함
-        backdrop.style.setProperty("--backdrop-header-pct", headerPct + "%");
-        backdrop.style.setProperty("--backdrop-nav-pct", navPct + "%");
+        backdrop.style.background = `linear-gradient(to bottom, var(--primary) 0 ${headerPct}%, var(--bg) ${headerPct}% ${navPct}%, var(--card) ${navPct}% 100%)`;
     }
 
     function refreshViewportSizing() {
