@@ -66,113 +66,60 @@
 
                 <div class="today">
                     <h2 class="title">오늘의 영양제</h2>
+                    <div class="today-list">
+                        <div class="today-item">
+                            <span class="today-item-name">탈모약</span>
+                            <div class="today-check-group">
+                                <span class="today-check-time"></span>
+                                <button type="button" class="today-check" aria-label="복용 체크">✓</button>
+                            </div>
+                        </div>
+                        <div class="today-item">
+                            <span class="today-item-name">한약</span>
+                            <div class="today-check-group">
+                                <span class="today-check-time"></span>
+                                <button type="button" class="today-check" aria-label="복용 체크">✓</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="imgBox">
                         <img id="waiting-mascot" src="images/logo-waiting1.png" alt="">
                     </div>
-                    <div class="buttonBox">
-                        <button type="button" class="btn-chip taken">추가</button>
-                    </div>
-                
-                </div>
-
-                <div class="section-title">상태별 영양제 추천</div>
-                <div class="card">
-                    <select class="condition-select">
-                        <option>피로</option>
-                        <option>감기</option>
-                        <option>몸살</option>
-                        <option>소화불량/설사·배탈</option>
-                        <option>음주</option>
-                        <option>불면</option>
-                        <option>관절 통증</option>
-                    </select>
-                </div>
-
-                <div class="section-title">"피로"에 도움이 될 수 있는 영양제</div>
-                <div class="card rec-item">
-                    <div class="rec-item-top">
-                        <span class="rec-name">비타민B군</span>
-
-                        <button class="rec-status safe">추가</button>
-                    </div>
-                </div>
-                <div class="card rec-item">
-                    <div class="rec-item-top">
-                        <span class="rec-name">탈모약</span>
-                        <div class="buttonBox">
-                            <button class="rec-status safe">추가</button>
-                        </div>
-                        
+                    <div class="tryBox">
+                        <div class="title">추천 받기</div>
+                        <ul class="button">
+                            <li><button>피로</button></li>
+                            <li><button>감기</button></li>
+                            <li><button>몸살</button></li>
+                            <li><button>소화불량</button></li>
+                            <li><button>음주</button></li>
+                            <li><button>불면</button></li>
+                            <li><button>관절 통증</button></li>
+                        </ul>
                     </div>
                 </div>
 
                 <div class="disclaimer">* 본 앱의 정보는 참고용입니다. 실제 복용 결정은 반드시 의사·약사와 상담하세요.</div>
+
+                <button type="button" class="fab" title="오늘 먹을 것 추가">+</button>
             </section>
 
             <!-- ===================== 영양제 ===================== -->
             <section class="panel panel-medicines">
                 <div class="section-title">내 영양제 (3)</div>
 
-                <div class="card medicine-card">
-                    <div class="med-top">
-                        <div>
-                            <div class="med-name">비타민C</div>
-                            <div class="med-meta"><span>1 정</span><span>08:00</span></div>
-                        </div>
-                        <div>
-                            <button type="button" class="icon-btn">✏️</button>
-                            <button type="button" class="icon-btn">🗑️</button>
-                        </div>
+                <div class="medicine-grid">
+                    <div class="medicine-tile" data-name="비타민C" data-category="비타민C" data-dosage="1" data-unit="정" data-qty="30" data-percent="100" data-amount="500mg" data-memo="매일 아침 식후에 복용하세요.">
+                        <div class="medicine-tile-photo tile-bg-1"><span class="medicine-tile-placeholder">💊</span></div>
+                        <div class="medicine-tile-label">비타민C</div>
                     </div>
-                    <div class="med-inv-row">
-                        <div class="inv-days-left">약 30일분 남음</div>
-                        <div class="inv-qty-control">
-                            <button type="button" class="qty-btn">－</button>
-                            <span class="qty-value">30정</span>
-                            <button type="button" class="qty-btn">＋</button>
-                        </div>
+                    <div class="medicine-tile" data-name="오메가3" data-category="오메가3" data-dosage="1" data-unit="캡슐" data-qty="18" data-percent="80" data-amount="1000mg" data-memo="식후에 복용하면 흡수가 더 잘돼요.">
+                        <div class="medicine-tile-photo tile-bg-2"><span class="medicine-tile-placeholder">💊</span></div>
+                        <div class="medicine-tile-label">오메가3</div>
                     </div>
-                </div>
-
-                <div class="card medicine-card">
-                    <div class="med-top">
-                        <div>
-                            <div class="med-name">오메가3</div>
-                            <div class="med-meta"><span>1 캡슐</span><span>08:00</span></div>
-                        </div>
-                        <div>
-                            <button type="button" class="icon-btn">✏️</button>
-                            <button type="button" class="icon-btn">🗑️</button>
-                        </div>
-                    </div>
-                    <div class="med-inv-row">
-                        <div class="inv-days-left">약 18일분 남음</div>
-                        <div class="inv-qty-control">
-                            <button type="button" class="qty-btn">－</button>
-                            <span class="qty-value">18캡슐</span>
-                            <button type="button" class="qty-btn">＋</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card medicine-card low">
-                    <div class="med-top">
-                        <div>
-                            <div class="med-name">칼슘</div>
-                            <div class="med-meta"><span>1 정</span><span>08:00</span></div>
-                        </div>
-                        <div>
-                            <button type="button" class="icon-btn">✏️</button>
-                            <button type="button" class="icon-btn">🗑️</button>
-                        </div>
-                    </div>
-                    <div class="med-inv-row">
-                        <div class="inv-days-left low">약 3일분 남음 · 재고 부족</div>
-                        <div class="inv-qty-control">
-                            <button type="button" class="qty-btn">－</button>
-                            <span class="qty-value">3정</span>
-                            <button type="button" class="qty-btn">＋</button>
-                        </div>
+                    <div class="medicine-tile" data-name="칼슘" data-category="칼슘" data-dosage="1" data-unit="정" data-qty="3" data-percent="45" data-amount="600mg" data-memo="철분 제품과는 2시간 이상 간격을 두고 복용하세요.">
+                        <div class="medicine-tile-photo tile-bg-3"><span class="medicine-tile-placeholder">💊</span></div>
+                        <div class="medicine-tile-label">칼슘</div>
                     </div>
                 </div>
 
@@ -236,9 +183,9 @@
         </main>
 
         <nav class="menu">
-            <label class="menu" for="menu-home">홈</label>
-            <label class="menu" for="menu-medicines">영양제</label>
-            <label class="menu" for="menu-nutrition">영양분석</label>
+            <label class="menu" for="menu-medicines"><img class="menu-icon" src="images/icon-pill.png" alt="">영양제</label>
+            <label class="menu" for="menu-home"><span class="menu-home-circle"><img class="menu-icon" src="images/icon-home.png" alt="">홈</span></label>
+            <label class="menu" for="menu-nutrition"><img class="menu-icon" src="images/icon-cart.png" alt="">건강상태</label>
         </nav>
     </div>
 
