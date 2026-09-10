@@ -29,23 +29,24 @@ button:focus {outline: none}
 
 html, body {
     height: 100%;
-    height: 100dvh; /* 모바일 브라우저 주소창이 접히고 펴지는 것까지 반영해서 하단 네비가 잘리지 않게 함 */
+    height: var(--vh100, 100dvh); /* 모바일 브라우저 주소창이 접히고 펴지는 것까지 반영해서 하단 네비가 잘리지 않게 함 */
     margin: 0;
     overflow: hidden;
 }
 
 body {
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-    background: var(--bg);
+    background: var(--primary);
     color: var(--text);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* 디자인 기준 크기는 430x932(아이폰 프로맥스 비율)로 고정하고, 실제 화면 가로/세로
-   비율과 정확히 같지 않아도 가로/세로를 각각 꽉 채우도록 scaleX/scaleY를 따로 줌
-   (실사용 기기에서는 그 차이가 1% 안팎이라 눈에 띄는 왜곡은 없음).
+/* 디자인 기준 크기는 430x932(아이폰 프로맥스 비율)로 고정하고, 비율을 유지한 채
+   (왜곡 없이) 화면에 맞춰 확대/축소함. 기기 화면 비율이 디자인과 정확히 같지
+   않으면 한쪽에 약간의 여백이 남는데, body 배경을 헤더와 같은 초록색으로 해둬서
+   그 여백이 어색한 빈 공간이 아니라 이어지는 배경처럼 자연스럽게 보이게 함.
    터치 기기(실제 폰)에서는 화면을 그대로 꽉 채우고, 마우스로 쓰는 데스크톱
    브라우저에서만 보기 좋게 둥근 카드 모양으로 띄워서 보여줌. */
 .top {
@@ -53,7 +54,7 @@ body {
     width: 430px;
     height: 932px;
     flex-shrink: 0;
-    transform: scale(calc(100vw / 430px), calc(100dvh / 932px));
+    transform: scale(min(calc(100vw / 430px), calc(var(--vh100, 100dvh) / 932px)));
     background: var(--bg);
     display: flex;
     flex-direction: column;
@@ -65,7 +66,7 @@ body {
 @media (min-aspect-ratio: 3/4) {
     .top {
         width: 776px;
-        transform: scale(calc(100vw / 776px), calc(100dvh / 932px));
+        transform: scale(min(calc(100vw / 776px), calc(var(--vh100, 100dvh) / 932px)));
     }
 }
 
@@ -588,6 +589,46 @@ body {
 .tryBox-wrap .disclaimer {
     margin-top: 6px;
     margin-bottom: 0;
+}
+
+.push-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 4px 24px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.push-toggle {
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 13px;
+    background: var(--border);
+    position: relative;
+    transition: background 0.15s ease;
+}
+
+.push-toggle-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease;
+}
+
+.push-toggle[aria-checked="true"] {
+    background: var(--primary);
+}
+
+.push-toggle[aria-checked="true"] .push-toggle-knob {
+    transform: translateX(20px);
 }
 
 /* 내 영양제 목록 — 3열 정사각형 사진 그리드 */

@@ -5,6 +5,19 @@
     // "오늘의 영양제" 빈 상태 마스코트 애니메이션을 담당합니다.
     // 나머지 화면은 여전히 정적 HTML/CSS입니다.
 
+    // 모바일 브라우저는 100dvh를 지원 안 하거나(구형 브라우저) 값이 살짝 어긋나는
+    // 경우가 있어서, 실제 보이는 높이(window.innerHeight)를 JS로 직접 재서
+    // --vh100 변수에 저장해둠 — CSS의 100dvh보다 더 확실하게 맞음
+    function updateViewportHeightVar() {
+        document.documentElement.style.setProperty("--vh100", window.innerHeight + "px");
+    }
+    updateViewportHeightVar();
+    window.addEventListener("resize", updateViewportHeightVar);
+    window.addEventListener("orientationchange", updateViewportHeightVar);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", updateViewportHeightVar);
+    }
+
     const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
     // 캡슐 그래프의 각 영양소 막대 정보 (클릭 시 뜨는 설명 팝업에 사용)
@@ -389,6 +402,68 @@
         overlay.querySelector('[data-action="push-dismiss"]').addEventListener("click", () => {
             localStorage.setItem(PUSH_ASKED_KEY, "1");
             close();
+        });
+    }
+
+    // 서버에 예약해둔 QStash 스케줄과 구독 정보를 모두 지워서 알림을 완전히 끔
+    async function disableGeneralServerPushReminders() {
+        localStorage.removeItem(PUSH_SCHEDULED_KEY);
+        try {
+            const userId = localStorage.getItem(PUSH_USER_ID_KEY);
+            if (!userId) return;
+            await fetch("/api/unsubscribe-reminders", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId }),
+            });
+        } catch (err) {
+            console.warn("알림 해제 요청에 실패했어요:", err);
+        }
+    }
+
+    // 건강상태 탭 맨 아래 "잠금화면 복용 알림" 토글
+    function wirePushToggle() {
+        const toggle = document.getElementById("push-toggle");
+        if (!toggle) return;
+
+        const isOn = () =>
+            "Notification" in window && Notification.permission === "granted" && !!localStorage.getItem(PUSH_SCHEDULED_KEY);
+
+        toggle.setAttribute("aria-checked", String(isOn()));
+
+        toggle.addEventListener("click", () => {
+            if (!("Notification" in window)) {
+                alert("이 브라우저는 알림 기능을 지원하지 않아요.");
+                return;
+            }
+
+            const nowOn = toggle.getAttribute("aria-checked") === "true";
+            if (nowOn) {
+                toggle.setAttribute("aria-checked", "false");
+                disableGeneralServerPushReminders();
+                return;
+            }
+
+            if (Notification.permission === "denied") {
+                alert("알림이 차단되어 있어요. 브라우저 설정에서 이 사이트의 알림 권한을 허용해주세요.");
+                return;
+            }
+
+            const grantAndEnable = () => {
+                localStorage.setItem(PUSH_ASKED_KEY, "1");
+                setupGeneralServerPushReminders().then((ok) => {
+                    toggle.setAttribute("aria-checked", String(!!ok));
+                });
+            };
+
+            if (Notification.permission === "granted") {
+                grantAndEnable();
+            } else {
+                Notification.requestPermission().then((permission) => {
+                    if (permission === "granted") grantAndEnable();
+                    else toggle.setAttribute("aria-checked", "false");
+                });
+            }
         });
     }
 
@@ -1484,6 +1559,7 @@
         if ("Notification" in window && Notification.permission === "granted" && !localStorage.getItem(PUSH_SCHEDULED_KEY)) {
             setupGeneralServerPushReminders();
         }
+        wirePushToggle();
     }
 
     if (document.readyState === "loading") {
