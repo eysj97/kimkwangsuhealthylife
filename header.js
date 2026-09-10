@@ -45,12 +45,19 @@
             return;
         }
 
-        const headerBottom = header.getBoundingClientRect().bottom;
+        // 홈 탭은 헤더 아래로 초록색 캡슐 그래프(.boxGrap)가 이어지므로, 그 부분까지
+        // 초록 구간에 포함시킴(다른 탭은 헤더에서 바로 흰 배경이라 header만 보면 됨)
+        let greenBottom = header.getBoundingClientRect().bottom;
+        const boxGrap = document.querySelector(".panel-home .boxGrap");
+        if (boxGrap && boxGrap.offsetParent !== null) {
+            greenBottom = Math.max(greenBottom, boxGrap.getBoundingClientRect().bottom);
+        }
+
         const navTop = nav.getBoundingClientRect().top;
         const vh = getRealViewportHeight();
         if (vh <= 0) return;
 
-        const headerPct = Math.max(0, Math.min(100, (headerBottom / vh) * 100));
+        const headerPct = Math.max(0, Math.min(100, (greenBottom / vh) * 100));
         const navPct = Math.max(headerPct, Math.min(100, (navTop / vh) * 100));
 
         backdrop.style.background = `linear-gradient(to bottom, var(--primary) 0 ${headerPct}%, var(--bg) ${headerPct}% ${navPct}%, var(--card) ${navPct}% 100%)`;
