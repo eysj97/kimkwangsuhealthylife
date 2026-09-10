@@ -447,7 +447,7 @@
             overlay.querySelector("#d-qty-value").textContent = draftQty;
         });
 
-        overlay.querySelector("#detail-form").addEventListener("submit", (e) => {
+        overlay.querySelector("#detail-form").addEventListener("submit", async (e) => {
             e.preventDefault();
             const name = overlay.querySelector("#d-name").value.trim();
             if (!name) return;
@@ -458,6 +458,12 @@
             const amount = overlay.querySelector("#d-amount").value.trim();
             const memo = overlay.querySelector("#d-memo").value.trim();
 
+            // localStorage에 계속 남을 수 있도록 blob URL 대신 data URL(base64)로 변환
+            const [photoDataUrl, labelDataUrl] = await Promise.all([
+                fileToDataURL(capturedPhotos.product.file),
+                fileToDataURL(capturedPhotos.label.file),
+            ]);
+
             addMedicineCard({
                 name,
                 category,
@@ -467,13 +473,22 @@
                 percent,
                 amount,
                 memo,
-                photoUrl: capturedPhotos.product.url,
-                labelPhotoUrl: capturedPhotos.label.url,
+                photoUrl: photoDataUrl,
+                labelPhotoUrl: labelDataUrl,
             });
+            saveMedicinesToStorage();
 
-            // 성공 경로: product.url / label.url 모두 방금 만든 타일이 계속 참조하므로 revoke하지 않고 참조만 비움
-            capturedPhotos = { product: null, label: null };
+            resetCapturedPhotos();
             closeDetailOverlay();
+        });
+    }
+
+    function fileToDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
         });
     }
 
@@ -511,6 +526,78 @@
         `;
         grid.appendChild(tile);
         updateMedicineCount();
+    }
+
+    // ---------- 내 영양제: localStorage에 저장/복원 ----------
+    const MEDICINES_STORAGE_KEY = "gwangja_medicines_v1";
+
+    function saveMedicinesToStorage() {
+        const tiles = Array.from(document.querySelectorAll(".medicine-tile"));
+        const data = tiles.map((t) => {
+            const img = t.querySelector(".medicine-tile-photo img");
+            return {
+                name: t.dataset.name || "",
+                category: t.dataset.category || "",
+                dosage: t.dataset.dosage || "",
+                unit: t.dataset.unit || "",
+                qty: t.dataset.qty || "0",
+                percent: t.dataset.percent || "",
+                amount: t.dataset.amount || "",
+                memo: t.dataset.memo || "",
+                photoUrl: img ? img.src : "",
+                labelPhoto: t.dataset.labelPhoto || "",
+            };
+        });
+        try {
+            localStorage.setItem(MEDICINES_STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+            // 저장 용량 초과 등은 데모 앱 특성상 조용히 무시
+        }
+    }
+
+    // 페이지 로드 시 1회 호출: localStorage에 저장된 게 있으면 그걸로 그리드를 다시 그리고,
+    // 없으면(첫 방문) 지금 정적 HTML에 있는 타일들을 그대로 저장해서 앞으로도 유지되게 함
+    function restoreMedicinesFromStorage() {
+        let saved = null;
+        try {
+            const raw = localStorage.getItem(MEDICINES_STORAGE_KEY);
+            saved = raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            saved = null;
+        }
+
+        if (!saved) {
+            saveMedicinesToStorage();
+            return;
+        }
+
+        const panel = document.querySelector(".panel-medicines");
+        const grid = panel ? panel.querySelector(".medicine-grid") : null;
+        if (grid) grid.innerHTML = "";
+
+        saved.forEach((m) => {
+            addMedicineCard({
+                name: m.name,
+                category: m.category,
+                dosage: m.dosage,
+                unit: m.unit,
+                quantity: Number(m.qty) || 0,
+                percent: m.percent,
+                amount: m.amount,
+                memo: m.memo,
+                photoUrl: m.photoUrl,
+                labelPhotoUrl: m.labelPhoto,
+            });
+        });
+    }
+
+    function deleteMedicineTile(tile) {
+        const name = tile.dataset.name || "";
+        if (!confirm(`'${name}'을(를) 삭제할까요? 등록된 사진과 정보가 모두 사라져요.`)) return false;
+        tile.remove();
+        updateMedicineCount();
+        saveMedicinesToStorage();
+        return true;
     }
 
     function updateMedicineCount() {
@@ -566,7 +653,14 @@
                 </div>
                 <div class="detail-body">
                     <h2 class="detail-view-name">${escapeHtml(name)}</h2>
-                    ${category ? `<div class="detail-category-badge">${escapeHtml(category)}</div>` : ""}
+                    <div class="detail-category-badges">
+                        ${category
+                            .split(",")
+                            .map((c) => c.trim())
+                            .filter(Boolean)
+                            .map((c) => `<span class="detail-category-badge">${escapeHtml(c)}</span>`)
+                            .join("")}
+                    </div>
 
                     <div class="detail-field-label">복용 방법</div>
                     <div class="detail-sub-row"><span>1회 ${escapeHtml(dosage)}${escapeHtml(unit)} 복용</span></div>
@@ -588,6 +682,8 @@
                                </div>`
                             : ""
                     }
+
+                    <button type="button" class="detail-delete-btn" data-action="delete-medicine">이 영양제 삭제</button>
                 </div>
             </div>
         `;
@@ -606,24 +702,38 @@
             qty = Math.max(0, qty - 1);
             overlay.querySelector("#v-qty-value").textContent = qty;
             tile.dataset.qty = qty;
+            saveMedicinesToStorage();
         });
         overlay.querySelector('[data-action="v-inc"]').addEventListener("click", () => {
             qty += 1;
             overlay.querySelector("#v-qty-value").textContent = qty;
             tile.dataset.qty = qty;
+            saveMedicinesToStorage();
+        });
+        overlay.querySelector('[data-action="delete-medicine"]').addEventListener("click", () => {
+            if (deleteMedicineTile(tile)) closeDetailOverlay();
         });
     }
 
     // ---------- 오늘의 영양제: + 버튼 → 내 영양제 목록에서 골라 오늘 목록에 추가 ----------
     // 복용 체크 시 해당 영양소의 헤더 아래 섭취 그래프(boxGrap)를 채워줌
-    function applyNutrientIntake(category, percent, add) {
-        if (!category || !percent) return;
-        const source = NUTRIENT_SOURCES.find((nu) => nu.label === category);
-        if (!source) return;
-        document.querySelectorAll(`.nutrient-fill.${source.key}`).forEach((fillEl) => {
-            const current = parseFloat(fillEl.style.height) || 0;
-            const next = Math.max(0, current + (add ? percent : -percent));
-            fillEl.style.height = `${next}%`;
+    // "마그네슘,비타민D" + "100,100" 처럼 콤마로 나열된 여러 성분을 병렬 목록으로 해석
+    function parseNutrientList(categoryStr, percentStr) {
+        const labels = (categoryStr || "").split(",").map((s) => s.trim()).filter(Boolean);
+        const percents = (percentStr || "").split(",").map((s) => s.trim());
+        return labels.map((label, i) => ({ label, percent: Number(percents[i]) || 0 }));
+    }
+
+    function applyNutrientIntake(categoryStr, percentStr, add) {
+        parseNutrientList(categoryStr, percentStr).forEach(({ label, percent }) => {
+            if (!percent) return;
+            const source = NUTRIENT_SOURCES.find((nu) => nu.label === label);
+            if (!source) return;
+            document.querySelectorAll(`.nutrient-fill.${source.key}`).forEach((fillEl) => {
+                const current = parseFloat(fillEl.style.height) || 0;
+                const next = Math.max(0, current + (add ? percent : -percent));
+                fillEl.style.height = `${next}%`;
+            });
         });
         refreshNutritionAnalysis();
     }
@@ -696,21 +806,24 @@
             const timeEl = btn.parentElement.querySelector(".today-check-time");
             const item = btn.closest(".today-item");
             const category = item ? item.dataset.category : "";
-            const percent = item ? Number(item.dataset.percent || 0) : 0;
+            const percent = item ? item.dataset.percent : "";
             const name = item ? item.querySelector(".today-item-name").textContent : "";
 
             applyNutrientIntake(category, percent, checked);
             adjustStock(name, !checked);
 
-            if (!timeEl) return;
-            if (checked) {
-                const now = new Date();
-                const hh = String(now.getHours()).padStart(2, "0");
-                const mm = String(now.getMinutes()).padStart(2, "0");
-                timeEl.textContent = `${hh}:${mm}`;
-            } else {
-                timeEl.textContent = "";
+            if (timeEl) {
+                if (checked) {
+                    const now = new Date();
+                    const hh = String(now.getHours()).padStart(2, "0");
+                    const mm = String(now.getMinutes()).padStart(2, "0");
+                    timeEl.textContent = `${hh}:${mm}`;
+                } else {
+                    timeEl.textContent = "";
+                }
             }
+            saveTodayToStorage();
+            saveMedicinesToStorage();
         });
     }
 
@@ -740,6 +853,61 @@
 
         const imgBox = document.querySelector(".today .imgBox");
         if (imgBox) imgBox.style.visibility = "hidden";
+
+        saveTodayToStorage();
+        return item;
+    }
+
+    // ---------- 오늘의 영양제: localStorage에 저장/복원 ----------
+    const TODAY_STORAGE_KEY = "gwangja_today_v1";
+
+    function saveTodayToStorage() {
+        const items = Array.from(document.querySelectorAll(".today-item")).map((item) => ({
+            name: item.querySelector(".today-item-name").textContent,
+            checked: item.querySelector(".today-check").classList.contains("checked"),
+            time: item.querySelector(".today-check-time").textContent || "",
+            removable: !!item.querySelector(".today-item-remove"),
+        }));
+        try {
+            localStorage.setItem(TODAY_STORAGE_KEY, JSON.stringify(items));
+        } catch (e) {
+            // 저장 용량 초과 등은 데모 앱 특성상 조용히 무시
+        }
+    }
+
+    // 페이지 로드 시 1회 호출: 고정 항목(탈모약/한약)은 체크 상태만 복원하고,
+    // 새로 추가했던 항목은 다시 만든 뒤 체크 상태를 복원함. 재고는 이미 영양제 타일에
+    // 저장돼 있으므로 다시 차감하지 않고, 영양소 그래프만 체크된 항목 기준으로 다시 채움
+    function restoreTodayFromStorage() {
+        let saved = null;
+        try {
+            const raw = localStorage.getItem(TODAY_STORAGE_KEY);
+            saved = raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            saved = null;
+        }
+        if (!saved) return;
+
+        saved.forEach((s) => {
+            let item;
+            if (s.removable) {
+                item = addTodayItem(s.name);
+            } else {
+                item = Array.from(document.querySelectorAll(".today-item")).find(
+                    (el) => !el.querySelector(".today-item-remove") && el.querySelector(".today-item-name").textContent === s.name
+                );
+            }
+            if (item && s.checked) {
+                item.querySelector(".today-check").classList.add("checked");
+                item.querySelector(".today-check-time").textContent = s.time;
+            }
+        });
+
+        document.querySelectorAll(".today-item").forEach((item) => {
+            if (item.querySelector(".today-check").classList.contains("checked")) {
+                applyNutrientIntake(item.dataset.category, item.dataset.percent, true);
+            }
+        });
     }
 
     function isAlreadyInTodayList(name) {
@@ -760,7 +928,9 @@
 
         const rowsHtml = nutrients
             .map((nutrient) => {
-                const owned = tiles.filter((t) => (t.dataset.category || "") === nutrient);
+                const owned = tiles.filter((t) =>
+                    parseNutrientList(t.dataset.category, t.dataset.percent).some((n) => n.label === nutrient)
+                );
                 if (owned.length === 0) {
                     return `
                     <div class="card rec-item-top">
@@ -861,11 +1031,16 @@
         item.querySelector(".today-item-remove").addEventListener("click", (e) => {
             e.stopPropagation();
             if (confirm(`'${name}'을(를) 오늘의 영양제 목록에서 삭제할까요?`)) {
+                if (item.querySelector(".today-check").classList.contains("checked")) {
+                    applyNutrientIntake(item.dataset.category, item.dataset.percent, false);
+                }
                 item.remove();
 
                 const remaining = document.querySelectorAll(".today-item .today-item-remove").length;
                 const imgBox = document.querySelector(".today .imgBox");
                 if (remaining === 0 && imgBox) imgBox.style.visibility = "visible";
+
+                saveTodayToStorage();
             }
         });
 
@@ -961,6 +1136,8 @@
         const homeMenuRadio = document.getElementById("menu-home");
         if (homeMenuRadio) homeMenuRadio.addEventListener("change", showRandomWaitingMascot);
 
+        restoreMedicinesFromStorage();
+
         wireConditionButtons();
         updateMedicineCount();
         wireNutrientPills();
@@ -987,6 +1164,8 @@
         }
 
         document.querySelectorAll(".today-check").forEach(wireTodayCheck);
+        restoreTodayFromStorage();
+        refreshNutritionAnalysis();
 
         checkReminders();
         setInterval(checkReminders, 30000);

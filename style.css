@@ -289,6 +289,9 @@ body {
 .boxGrap-inline .lineBasic p{
     color: var(--text-muted);
 }
+.boxGrap-inline .nutrient-fill{
+    background: var(--primary);
+}
 .lineBasic{
     width: 60px;
     display: flex;
@@ -310,7 +313,7 @@ body {
     right: 0;
     bottom: 0;
     height: 0%;
-    background: var(--primary);
+    background: var(--primary-light);
     transition: height 0.3s ease;
 }
 .lineBasic p{
@@ -981,6 +984,13 @@ body {
     margin-bottom: 6px;
 }
 
+.detail-category-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
 .detail-category-badge {
     display: inline-block;
     background: var(--primary-mid);
@@ -989,7 +999,18 @@ body {
     font-weight: 700;
     padding: 5px 12px;
     border-radius: 20px;
-    margin-bottom: 14px;
+}
+
+.detail-delete-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    border: 1px solid var(--danger);
+    border-radius: 12px;
+    background: none;
+    color: var(--danger);
+    font-size: 13px;
+    font-weight: 700;
 }
 
 .detail-view-memo {
@@ -1222,10 +1243,6 @@ body {
     font-weight: 600;
     color: var(--text-muted);
     text-align: center;
-}
-
-.nutrient-gap-item {
-    border-left: 3px solid var(--warning);
 }
 
 .nutrient-gap-item.over {
