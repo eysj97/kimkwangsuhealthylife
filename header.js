@@ -354,28 +354,41 @@
         }
     }
 
-    function wirePushPermissionBanner() {
-        const banner = document.getElementById("push-permission-banner");
-        if (!banner) return;
+    // 처음 접속했을 때 딱 한 번만 팝업으로 알림 허용 여부를 물어봄(배너로 계속 떠있지 않게)
+    const PUSH_ASKED_KEY = "gwangja_push_asked_v1";
 
-        const dismissed = localStorage.getItem("gwangja_push_banner_dismissed");
-        const alreadyScheduled = localStorage.getItem(PUSH_SCHEDULED_KEY);
-        if (dismissed || alreadyScheduled || !("Notification" in window) || Notification.permission !== "default") {
-            banner.hidden = true;
-            return;
-        }
-        banner.hidden = false;
+    function maybeShowPushPermissionModal() {
+        if (localStorage.getItem(PUSH_ASKED_KEY)) return;
+        if (!("Notification" in window) || Notification.permission !== "default") return;
 
-        banner.querySelector('[data-action="push-allow"]').addEventListener("click", () => {
+        const host = document.querySelector(".top") || document.body;
+        const overlay = document.createElement("div");
+        overlay.className = "push-permission-overlay";
+        overlay.innerHTML = `
+            <div class="push-permission-sheet">
+                <div class="push-permission-icon">🔔</div>
+                <h3>복용 알림을 받아보시겠어요?</h3>
+                <p>앱을 켜두지 않아도, 잠금화면에서 정해진 시간에 영양제 복용 알림을 받을 수 있어요.</p>
+                <div class="push-permission-sheet-actions">
+                    <button type="button" data-action="push-allow">알림 받기</button>
+                    <button type="button" data-action="push-dismiss">다음에 할게요</button>
+                </div>
+            </div>
+        `;
+        host.appendChild(overlay);
+
+        const close = () => overlay.remove();
+
+        overlay.querySelector('[data-action="push-allow"]').addEventListener("click", () => {
             Notification.requestPermission().then((permission) => {
-                banner.hidden = true;
+                localStorage.setItem(PUSH_ASKED_KEY, "1");
+                close();
                 if (permission === "granted") setupGeneralServerPushReminders();
-                else localStorage.setItem("gwangja_push_banner_dismissed", "1");
             });
         });
-        banner.querySelector('[data-action="push-dismiss"]').addEventListener("click", () => {
-            localStorage.setItem("gwangja_push_banner_dismissed", "1");
-            banner.hidden = true;
+        overlay.querySelector('[data-action="push-dismiss"]').addEventListener("click", () => {
+            localStorage.setItem(PUSH_ASKED_KEY, "1");
+            close();
         });
     }
 
@@ -1467,7 +1480,7 @@
         checkReminders();
         setInterval(checkReminders, 30000);
 
-        wirePushPermissionBanner();
+        maybeShowPushPermissionModal();
         if ("Notification" in window && Notification.permission === "granted" && !localStorage.getItem(PUSH_SCHEDULED_KEY)) {
             setupGeneralServerPushReminders();
         }

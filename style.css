@@ -36,39 +36,48 @@ html, body {
 
 body {
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-    background: #d9dedb;
+    background: var(--bg);
     color: var(--text);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* 디자인 기준 크기는 430x932(아이폰 프로맥스 비율)로 고정하고, 어떤 화면 크기든
-   비율을 유지한 채 확대/축소되도록 함. transform을 적용하면 이 요소가
-   자식들(하단 메뉴, FAB) 중 fixed 포지션의 기준점이 되므로,
-   같이 스케일되어 보임. */
+/* 디자인 기준 크기는 430x932(아이폰 프로맥스 비율)로 고정하고, 실제 화면 가로/세로
+   비율과 정확히 같지 않아도 가로/세로를 각각 꽉 채우도록 scaleX/scaleY를 따로 줌
+   (실사용 기기에서는 그 차이가 1% 안팎이라 눈에 띄는 왜곡은 없음).
+   터치 기기(실제 폰)에서는 화면을 그대로 꽉 채우고, 마우스로 쓰는 데스크톱
+   브라우저에서만 보기 좋게 둥근 카드 모양으로 띄워서 보여줌. */
 .top {
     position: relative;
     width: 430px;
     height: 932px;
     flex-shrink: 0;
-    transform: scale(min(calc(100vw / 430px), calc(100dvh / 932px)));
+    transform: scale(calc(100vw / 430px), calc(100dvh / 932px));
     background: var(--bg);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-radius: 32px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
 /* 갤럭시 Z 폴드 메인(펼친) 화면처럼 정사각형에 가까운 화면(가로/세로 비율 0.75 이상)에서는
-   앱 프레임 자체를 더 넓게 잡아서(폼팩터 비율에 맞춰) 좌우 여백을 크게 줄임.
-   가로/세로 중 하나라도 넘치면 안 되니 두 비율 중 더 작은 쪽으로 맞추되,
-   기준 너비(760px)를 실제 폴드 펼친 화면 비율에 가깝게 잡아서 위아래 여백은 최소화함 */
+   앱 프레임 자체를 더 넓게 잡아서(폼팩터 비율에 맞춰) 좌우 여백을 크게 줄임 */
 @media (min-aspect-ratio: 3/4) {
     .top {
         width: 776px;
-        transform: scale(min(calc(100vw / 776px), calc(100dvh / 932px)));
+        transform: scale(calc(100vw / 776px), calc(100dvh / 932px));
+    }
+}
+
+/* 마우스 포인터가 있는 데스크톱 브라우저(=실제 폰이 아닌 환경)에서만 화면 크기와
+   무관하게 둥근 모서리 + 그림자를 주는 "기기 미리보기" 카드 느낌을 줌 */
+@media (hover: hover) and (pointer: fine) {
+    body {
+        background: #d9dedb;
+    }
+    .top {
+        border-radius: 32px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
     }
 }
 
@@ -92,7 +101,9 @@ body {
     padding-top: 14px;
 }
 
-#menu-home:checked ~ .view .panel-home,
+#menu-home:checked ~ .view .panel-home {
+    display: flex;
+}
 #menu-medicines:checked ~ .view .panel-medicines,
 #menu-nutrition:checked ~ .view .panel-nutrition {
     display: block;
@@ -317,41 +328,84 @@ body {
 }
 
 
-/* 오늘의 영양제 (홈) */
-.push-permission-banner{
-    margin: 20px 20px 0;
-    padding: 12px 14px;
-    background: var(--card);
-    border-radius: 12px;
+/* 최초 접속 시 뜨는 "잠금화면 알림 받기" 팝업 */
+.push-permission-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    font-size: 12px;
-    color: var(--text);
+    justify-content: center;
+    z-index: 45;
+    padding: 24px;
 }
-.push-permission-actions{
+.push-permission-sheet {
+    background: #fff;
+    width: 100%;
+    max-width: 320px;
+    border-radius: 18px;
+    padding: 24px 20px;
+    text-align: center;
+}
+.push-permission-sheet .push-permission-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+.push-permission-sheet h3 {
+    margin: 0 0 8px;
+    color: var(--primary-dark);
+    font-size: 17px;
+}
+.push-permission-sheet p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 18px;
+}
+.push-permission-sheet-actions {
     display: flex;
-    gap: 6px;
-    flex-shrink: 0;
+    flex-direction: column;
+    gap: 8px;
 }
-.push-permission-actions button{
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 12px;
+.push-permission-sheet-actions button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px;
     font-weight: 700;
 }
-.push-permission-actions [data-action="push-allow"]{
+.push-permission-sheet-actions [data-action="push-allow"] {
     background: var(--primary);
     color: #fff;
 }
-.push-permission-actions [data-action="push-dismiss"]{
+.push-permission-sheet-actions [data-action="push-dismiss"] {
     background: none;
     color: var(--text-muted);
 }
 
+/* 홈 화면: 그래프 + 오늘의 영양제는 화면에 고정되고(스크롤 안 됨),
+   추천받기 영역만 따로 스크롤해서 볼 수 있음 */
+.panel-home{
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+.home-top{
+    flex-shrink: 0;
+}
+.home-scroll{
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding: 0 20px 100px;
+}
+.home-scroll::-webkit-scrollbar{
+    display: none;
+}
+
 .today{
-    padding: 28px 20px 0;
+    padding: 28px 20px 20px;
 }
 .today .title{font-size: 18px; font-weight: 600;}
 .today-list{
@@ -409,34 +463,23 @@ body {
     border-color: var(--danger);
     color: #fff;
 }
-.today .imgBox{height: 200px; display: flex; justify-content: center; padding: 50px 0;}
-.today .imgBox img{height: 100%; width: auto; object-fit: contain; transition: opacity 0.2s ease;}
+.imgBox{height: 200px; display: flex; justify-content: center; padding: 50px 0;}
+.imgBox img{height: 100%; width: auto; object-fit: contain; transition: opacity 0.2s ease;}
 
-.today .tryBox-wrap{
-    position: absolute;
-    left: 20px;
-    right: 20px;
-    bottom: 82px;
-    z-index: 5;
-}
-
-.today .tryBox{
+.tryBox{
     background: var(--card);
     padding: 8px 8px;
     border-radius: 8px;
 }
 
-.panel-home{
-    padding-bottom: 100px;
-}
-.today .tryBox .title{font-size: 12px; margin-bottom: 12px;}
-.today .button{
+.tryBox .title{font-size: 12px; margin-bottom: 12px;}
+.button{
     display: flex; justify-content: center;
     flex-wrap: wrap;
     gap: 8px;
 }
-.today .button button{background: var(--primary-light); padding: 4px 8px; border-radius: 12px; font-size: 12px;}
-.today .button button.active{background: var(--primary); color: #fff;}
+.button button{background: var(--primary-light); padding: 4px 8px; border-radius: 12px; font-size: 12px;}
+.button button.active{background: var(--primary); color: #fff;}
 
 #rec-results{margin-top: 10px;}
 #rec-results .card{background: #fff; margin-bottom: 8px;}
