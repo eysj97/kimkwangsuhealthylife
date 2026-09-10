@@ -272,6 +272,34 @@
         }
     }
 
+    // 영양제 상세페이지에서 "매일 복용 알림 캘린더에 추가"로 설정한 시간들.
+    // 이 탭이 열려 있을 때 그 시간이 되면 위 알림과 같은 방식으로 해당 영양제 이름으로 알려줌
+    const MEDICINE_REMINDERS_KEY = "gwangja_medicine_reminders_v1";
+
+    function loadMedicineReminders() {
+        try {
+            const raw = localStorage.getItem(MEDICINE_REMINDERS_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveMedicineReminder(name, hour, minute) {
+        const list = loadMedicineReminders().filter((r) => r.name !== name);
+        list.push({ name, hour, minute });
+        try {
+            localStorage.setItem(MEDICINE_REMINDERS_KEY, JSON.stringify(list));
+        } catch (e) {
+            // 저장 용량 초과 등은 조용히 무시
+        }
+    }
+
+    function fireMedicineReminderNotification(name) {
+        if (!("Notification" in window) || Notification.permission !== "granted") return;
+        new Notification(`💊 ${name} 복용하세요`, { body: "지금 복용할 시간이에요." });
+    }
+
     function checkReminders() {
         const now = new Date();
         const dateKey = localDateKey(now);
@@ -284,6 +312,16 @@
             localStorage.setItem(firedKey, "1");
 
             fireReminderNotification(reminder.files);
+        });
+
+        loadMedicineReminders().forEach((reminder, index) => {
+            if (now.getHours() !== reminder.hour || now.getMinutes() !== reminder.minute) return;
+
+            const firedKey = REMINDER_FIRED_KEY_PREFIX + "med_" + index + "_" + dateKey;
+            if (localStorage.getItem(firedKey)) return;
+            localStorage.setItem(firedKey, "1");
+
+            fireMedicineReminderNotification(reminder.name);
         });
     }
 
@@ -420,6 +458,7 @@
                         </div>
                     </div>
 
+                    <div class="ocr-scan-status" id="ocr-scan-status">성분표 사진을 스캔해서 자동으로 채워볼게요...</div>
                     <input type="text" class="detail-category-input" id="d-category" placeholder="카테고리 (예: 비타민, 오메가3)">
                     <input type="number" class="detail-category-input" id="d-percent" min="0" max="999" placeholder="하루 권장량 대비 % (예: 100)">
                     <input type="text" class="detail-category-input" id="d-amount" placeholder="실제 함유량 (예: 500mg)">
@@ -430,6 +469,7 @@
             </div>
         `;
         host.appendChild(overlay);
+        runLabelAutoScan(overlay);
 
         overlay.querySelectorAll(".detail-thumb").forEach((thumb) => {
             thumb.addEventListener("click", () => {
@@ -501,6 +541,192 @@
             reader.onerror = reject;
             reader.readAsDataURL(file);
         });
+    }
+
+    // ---------- 복용 알림을 기기 캘린더 앱에 추가: .ics 파일을 만들어 다운로드함.
+    // 앱 자체에 푸시 알림 기능은 없지만, 캘린더 앱(구글/삼성/애플 캘린더 등)에
+    // 매일 반복되는 일정으로 등록해두면 그 캘린더 앱이 알림을 대신 띄워줌 ----------
+    function pad2(n) {
+        return String(n).padStart(2, "0");
+    }
+
+    function downloadReminderIcsFile(name, dosage, unit, hour, minute) {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
+        const end = new Date(start.getTime() + 15 * 60 * 1000);
+        const toLocal = (d) => `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}T${pad2(d.getHours())}${pad2(d.getMinutes())}00`;
+        const uid = `gwangja-${Date.now()}@geongwangja`;
+
+        const ics = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//건광자//복용 알림//KO",
+            "CALSCALE:GREGORIAN",
+            "BEGIN:VEVENT",
+            `UID:${uid}`,
+            `DTSTAMP:${toLocal(now)}Z`,
+            `DTSTART:${toLocal(start)}`,
+            `DTEND:${toLocal(end)}`,
+            "RRULE:FREQ=DAILY",
+            `SUMMARY:💊 ${name} 복용`,
+            `DESCRIPTION:1회 ${dosage}${unit} 복용 알림 (건광자 앱에서 추가됨)`,
+            "BEGIN:VALARM",
+            "TRIGGER:-PT0M",
+            "ACTION:DISPLAY",
+            `DESCRIPTION:${name} 복용 시간이에요`,
+            "END:VALARM",
+            "END:VEVENT",
+            "END:VCALENDAR",
+        ].join("\r\n");
+
+        const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${name}-복용알림.ics`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // ---------- 성분표 사진 자동 스캔(OCR): Tesseract.js로 글자를 읽어서
+    // 카테고리/퍼센트/함유량 입력칸을 미리 채워줌. 인식이 틀릴 수 있어서
+    // 항상 사용자가 확인하고 고칠 수 있는 입력칸에 채우기만 함 ----------
+    // fuzzy:true인 키워드만 한 글자 정도 다르게 읽혀도 찾아냄. 비타민A/C/D처럼 글자 하나로만
+    // 구분되는 단어는 fuzzy를 켜면 서로 오인식되기 쉬워서 정확히 일치할 때만 인정함(fuzzy:false)
+    const OCR_NUTRIENT_KEYWORDS = [
+        { kw: "비타민D", label: "비타민D", fuzzy: false },
+        { kw: "비타민 D", label: "비타민D", fuzzy: false },
+        { kw: "비타민B12", label: "비타민B12", fuzzy: false },
+        { kw: "비타민 B12", label: "비타민B12", fuzzy: false },
+        { kw: "비타민A", label: "비타민A", fuzzy: false },
+        { kw: "비타민 A", label: "비타민A", fuzzy: false },
+        { kw: "비타민C", label: "비타민C", fuzzy: false },
+        { kw: "비타민 C", label: "비타민C", fuzzy: false },
+        { kw: "오메가3", label: "오메가3", fuzzy: true },
+        { kw: "오메가 3", label: "오메가3", fuzzy: true },
+        { kw: "마그네슘", label: "마그네슘", fuzzy: true },
+        { kw: "프로바이오틱스", label: "프로바이오틱스", fuzzy: true },
+        { kw: "유산균", label: "프로바이오틱스", fuzzy: true },
+        { kw: "엽산", label: "엽산", fuzzy: false },
+        { kw: "밀크씨슬", label: "밀크씨슬", fuzzy: true },
+        { kw: "실리마린", label: "밀크씨슬", fuzzy: true },
+        { kw: "블랙마카", label: "블랙마카", fuzzy: true },
+        { kw: "마카", label: "블랙마카", fuzzy: false },
+        { kw: "멀티비타민", label: "멀티비타민", fuzzy: true },
+        { kw: "아연", label: "아연", fuzzy: false },
+        { kw: "칼슘", label: "칼슘", fuzzy: false },
+        { kw: "철분", label: "철분", fuzzy: false },
+        { kw: "루테인", label: "루테인", fuzzy: true },
+        { kw: "콜라겐", label: "콜라겐", fuzzy: true },
+    ];
+
+    // 사진 인식 특성상 글자가 종종 틀리게 읽혀서("마그네슘" → "마그베숄" 등)
+    // fuzzy가 켜진 키워드는 한 글자 정도 다른 것까지 허용해 찾아냄
+    function levenshteinDistance(a, b) {
+        const dp = [];
+        for (let i = 0; i <= a.length; i++) dp.push([i]);
+        for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+        for (let i = 1; i <= a.length; i++) {
+            for (let j = 1; j <= b.length; j++) {
+                dp[i][j] =
+                    a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+        return dp[a.length][b.length];
+    }
+
+    function containsKeyword(cleanedText, keyword, fuzzy) {
+        const kw = keyword.replace(/[^가-힣a-zA-Z0-9]/g, "");
+        if (!fuzzy || kw.length < 4) return cleanedText.indexOf(kw) !== -1;
+        const maxDist = 1;
+        for (let i = 0; i <= cleanedText.length - kw.length; i++) {
+            if (levenshteinDistance(cleanedText.slice(i, i + kw.length), kw) <= maxDist) return true;
+        }
+        return false;
+    }
+
+    // 퍼센트/함유량 숫자는 성분표 표 안에 여러 개가 섞여 있어서(1회 섭취량, 총 내용량 등)
+    // 어떤 숫자가 어떤 성분 것인지 사진만으로 정확히 짝짓기 어려움 - 잘못된 숫자를
+    // 자신 있게 채워주는 것보다 카테고리(성분명)만 찾아주고 숫자는 직접 입력하게 둠
+    function guessNutrientInfoFromText(text) {
+        if (!text) return { category: "" };
+        const cleanedText = text.replace(/[^가-힣a-zA-Z0-9]/g, "");
+
+        const foundLabels = [];
+        OCR_NUTRIENT_KEYWORDS.forEach(({ kw, label, fuzzy }) => {
+            if (!containsKeyword(cleanedText, kw, fuzzy)) return;
+            if (!foundLabels.includes(label)) foundLabels.push(label);
+        });
+
+        return { category: foundLabels.join(",") };
+    }
+
+    // 작은 글씨가 많은 성분표 사진은 확대만 해도 Tesseract 인식률이 올라가서
+    // 인식 전에 캔버스로 2배 확대함 (색/대비를 억지로 바꾸면 라벨 디자인에 따라
+    // 오히려 글자가 배경에 묻혀버리는 경우가 있어 확대만 함)
+    function preprocessImageForOCR(file) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const scale = 2;
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                const ctx = canvas.getContext("2d");
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = "high";
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob((blob) => resolve(blob || file), "image/png");
+                URL.revokeObjectURL(img.src);
+            };
+            img.onerror = () => resolve(file);
+            img.src = URL.createObjectURL(file);
+        });
+    }
+
+    async function runLabelAutoScan(overlay) {
+        const statusEl = overlay.querySelector("#ocr-scan-status");
+        const categoryInput = overlay.querySelector("#d-category");
+        if (!statusEl || !capturedPhotos.label) return;
+
+        if (typeof Tesseract === "undefined") {
+            statusEl.textContent = "자동 스캔을 불러오지 못했어요. 직접 입력해주세요.";
+            statusEl.classList.add("ocr-scan-status-fail");
+            setTimeout(() => statusEl.remove(), 2500);
+            return;
+        }
+
+        statusEl.classList.add("scanning");
+        categoryInput.disabled = true;
+
+        try {
+            const processedImage = await preprocessImageForOCR(capturedPhotos.label.file);
+            const {
+                data: { text },
+            } = await Tesseract.recognize(processedImage, "kor+eng");
+
+            if (!overlay.isConnected) return; // 스캔 중 사용자가 창을 닫은 경우
+
+            const guess = guessNutrientInfoFromText(text);
+            if (guess.category) categoryInput.value = guess.category;
+
+            statusEl.classList.remove("scanning");
+            if (guess.category) {
+                statusEl.textContent = "성분표에서 이 성분을 찾았어요. 퍼센트·함유량은 직접 입력해주세요.";
+            } else {
+                statusEl.textContent = "자동으로 알아보지 못했어요. 직접 입력해주세요.";
+                statusEl.classList.add("ocr-scan-status-fail");
+            }
+        } catch (err) {
+            if (!overlay.isConnected) return;
+            statusEl.textContent = "자동 스캔에 실패했어요. 직접 입력해주세요.";
+            statusEl.classList.remove("scanning");
+            statusEl.classList.add("ocr-scan-status-fail");
+        } finally {
+            if (overlay.isConnected) categoryInput.disabled = false;
+        }
     }
 
     const TILE_BG_CLASSES = ["tile-bg-1", "tile-bg-2", "tile-bg-3"];
@@ -697,6 +923,7 @@
                             : ""
                     }
 
+                    <button type="button" class="detail-calendar-btn" data-action="add-to-calendar">📅 매일 복용 알림 캘린더에 추가</button>
                     <button type="button" class="detail-delete-btn" data-action="delete-medicine">이 영양제 삭제</button>
                 </div>
             </div>
@@ -726,6 +953,23 @@
         });
         overlay.querySelector('[data-action="delete-medicine"]').addEventListener("click", () => {
             if (deleteMedicineTile(tile)) closeDetailOverlay();
+        });
+
+        overlay.querySelector('[data-action="add-to-calendar"]').addEventListener("click", () => {
+            const timeInput = window.prompt("매일 몇 시에 알림을 받을까요? (예: 09:00)", "09:00");
+            if (timeInput === null) return;
+            const match = timeInput.trim().match(/^(\d{1,2}):(\d{2})$/);
+            if (!match) {
+                alert("시간 형식이 올바르지 않아요. 09:00 처럼 입력해주세요.");
+                return;
+            }
+            const hour = Number(match[1]);
+            const minute = Number(match[2]);
+            downloadReminderIcsFile(name, dosage, unit, hour, minute);
+            saveMedicineReminder(name, hour, minute);
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
         });
 
         overlay.querySelectorAll('[data-action="edit-amount"]').forEach((badge) => {
@@ -1225,5 +1469,13 @@
         document.addEventListener("DOMContentLoaded", init);
     } else {
         init();
+    }
+
+    // 홈 화면에 앱처럼 설치할 수 있도록(PWA) 서비스 워커 등록. 오프라인 캐싱만 담당하고,
+    // 서버에서 보내는 푸시 알림 기능은 아직 없음(잠금화면 알림은 이 탭이 열려있을 때만 동작)
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("service-worker.js").catch(() => {});
+        });
     }
 })();
