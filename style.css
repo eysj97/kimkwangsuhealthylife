@@ -605,9 +605,15 @@ body {
     line-height: 1.5;
 }
 
+/* 홈 화면이 고정 레이아웃이 되면서 흐름 안에 있으면 화면 밖으로 밀려 안 보일 수 있어서,
+   하단(플로팅 + 버튼 위)에 고정 배치함. .top이 transform을 갖고 있어 이 절대 위치는
+   .top 기준으로 잡힘(플로팅 + 버튼과 같은 기준) */
 .tryBox-wrap .disclaimer {
-    margin-top: 6px;
-    margin-bottom: 0;
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    bottom: 148px;
+    margin: 0;
 }
 
 .push-toggle-row {
