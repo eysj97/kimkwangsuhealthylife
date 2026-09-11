@@ -25,8 +25,10 @@ async function redisCommand(args) {
     return data.result;
 }
 
-async function redisSet(key, value) {
-    return redisCommand(["SET", key, JSON.stringify(value)]);
+async function redisSet(key, value, ttlSeconds) {
+    const args = ["SET", key, JSON.stringify(value)];
+    if (ttlSeconds) args.push("EX", String(ttlSeconds));
+    return redisCommand(args);
 }
 
 async function redisGet(key) {

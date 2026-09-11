@@ -649,6 +649,35 @@ body {
     transform: translateX(20px);
 }
 
+.sync-row {
+    padding: 4px 4px 24px;
+}
+.sync-row-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+.sync-row-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+.sync-row-actions {
+    display: flex;
+    gap: 8px;
+}
+.sync-row-actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--primary);
+    background: none;
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 700;
+}
+
 /* 내 영양제 목록 — 3열 정사각형 사진 그리드 */
 .medicine-grid {
     display: grid;

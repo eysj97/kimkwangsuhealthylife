@@ -530,6 +530,80 @@
         });
     }
 
+    // ---------- 다른 기기와 데이터 동기화: 사진은 용량이 커서 제외하고,
+    // 영양제 목록/오늘의 기록 텍스트 데이터만 서버(Upstash Redis)를 거쳐 옮김.
+    // 6자리 코드로 10분 동안만 주고받을 수 있음 ----------
+    function readLocalJson(key) {
+        try {
+            const raw = localStorage.getItem(key);
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function wireSyncButtons() {
+        const pushBtn = document.getElementById("sync-push-btn");
+        const pullBtn = document.getElementById("sync-pull-btn");
+        if (!pushBtn || !pullBtn) return;
+
+        pushBtn.addEventListener("click", async () => {
+            pushBtn.disabled = true;
+            pushBtn.textContent = "만드는 중...";
+            try {
+                const userId = getOrCreatePushUserId();
+                const medicines = readLocalJson(MEDICINES_STORAGE_KEY);
+                const today = readLocalJson(TODAY_STORAGE_KEY);
+
+                const res = await fetch("/api/sync-push", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId, medicines, today }),
+                });
+                const data = await res.json();
+                if (!res.ok || !data.code) throw new Error(data.error || "코드 발급에 실패했어요.");
+
+                alert(`동기화 코드: ${data.code}\n\n다른 기기의 건강상태 탭에서 "코드 입력하기"를 누르고 이 번호를 입력해주세요. 10분 동안만 유효해요.`);
+            } catch (err) {
+                alert("코드 발급에 실패했어요: " + (err.message || err));
+            } finally {
+                pushBtn.disabled = false;
+                pushBtn.textContent = "코드 만들기";
+            }
+        });
+
+        pullBtn.addEventListener("click", async () => {
+            const code = window.prompt("다른 기기에서 받은 6자리 동기화 코드를 입력해주세요.");
+            if (!code) return;
+
+            if (!confirm("지금 이 기기에 저장된 영양제 목록과 오늘의 기록이 가져온 데이터로 바뀌어요. 계속할까요?")) return;
+
+            pullBtn.disabled = true;
+            pullBtn.textContent = "가져오는 중...";
+            try {
+                const res = await fetch("/api/sync-pull", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ code: code.trim() }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "코드를 확인할 수 없어요.");
+
+                localStorage.setItem(MEDICINES_STORAGE_KEY, JSON.stringify(data.medicines || []));
+                localStorage.setItem(TODAY_STORAGE_KEY, JSON.stringify(data.today || []));
+                localStorage.setItem(PUSH_USER_ID_KEY, data.userId);
+
+                alert("동기화가 완료됐어요. 화면을 새로 불러올게요.");
+                window.location.reload();
+            } catch (err) {
+                alert("동기화에 실패했어요: " + (err.message || err));
+            } finally {
+                pullBtn.disabled = false;
+                pullBtn.textContent = "코드 입력하기";
+            }
+        });
+    }
+
     // ---------- 영양제 등록: 사진 촬영(제품 전체 / 성분표) → 상세정보 입력 ----------
     function escapeHtml(str) {
         return String(str || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -975,11 +1049,14 @@
         const defaultsByName = {};
         if (grid) {
             grid.querySelectorAll(".medicine-tile").forEach((t) => {
+                const img = t.querySelector(".medicine-tile-photo img");
                 defaultsByName[t.dataset.name] = {
                     category: t.dataset.category || "",
                     percent: t.dataset.percent || "",
                     amount: t.dataset.amount || "",
                     memo: t.dataset.memo || "",
+                    photoUrl: img ? img.src : "",
+                    labelPhoto: t.dataset.labelPhoto || "",
                 };
             });
         }
@@ -991,6 +1068,10 @@
             const percent = m.percent || (def ? def.percent : "");
             const amount = m.amount || (def ? def.amount : "");
             const memo = m.memo || (def ? def.memo : "");
+            // 사진(base64)은 기기 간 동기화 시 용량 문제로 제외되므로, 기본 제품이면
+            // 정적 HTML에 있는 사진으로 채워 넣음(직접 촬영한 사진은 그대로 유지됨)
+            const photoUrl = m.photoUrl || (def ? def.photoUrl : "");
+            const labelPhoto = m.labelPhoto || (def ? def.labelPhoto : "");
 
             addMedicineCard({
                 name: m.name,
@@ -1001,8 +1082,8 @@
                 percent,
                 amount,
                 memo,
-                photoUrl: m.photoUrl,
-                labelPhotoUrl: m.labelPhoto,
+                photoUrl,
+                labelPhotoUrl: labelPhoto,
             });
         });
 
@@ -1646,6 +1727,7 @@
             setupGeneralServerPushReminders();
         }
         wirePushToggle();
+        wireSyncButtons();
 
         updateScreenBackdrop();
         requestAnimationFrame(updateScreenBackdrop);
