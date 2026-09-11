@@ -399,8 +399,8 @@ body {
     color: var(--text-muted);
 }
 
-/* 홈 화면: 그래프 + 오늘의 영양제는 화면에 고정되고(스크롤 안 됨),
-   추천받기 영역만 따로 스크롤해서 볼 수 있음 */
+/* 홈 화면: 그래프만 화면에 고정되고(스크롤 안 됨), 오늘의 영양제 + 추천받기는
+   그 아래에서 자연스럽게 스크롤됨 */
 .panel-home{
     flex-direction: column;
     height: 100%;
@@ -409,11 +409,15 @@ body {
 .home-top{
     flex-shrink: 0;
 }
-/* 추천받기 박스 자체는 처음 위치에서 움직이지 않고, 결과 목록(#rec-results)만
-   내부적으로 스크롤되도록 함(위 max-height 참고) */
 .home-scroll{
-    flex-shrink: 0;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
     padding: 0 20px 100px;
+}
+.home-scroll::-webkit-scrollbar{
+    display: none;
 }
 
 .today{
@@ -493,15 +497,7 @@ body {
 .button button{background: var(--primary-light); padding: 4px 8px; border-radius: 12px; font-size: 12px;}
 .button button.active{background: var(--primary); color: #fff;}
 
-#rec-results{
-    margin-top: 10px;
-    max-height: 220px;
-    overflow-y: auto;
-    scrollbar-width: none;
-}
-#rec-results::-webkit-scrollbar{
-    display: none;
-}
+#rec-results{margin-top: 10px;}
 #rec-results .card{background: #fff; margin-bottom: 8px;}
 .rec-add-btn{
     width: 26px;
@@ -609,11 +605,8 @@ body {
    하단(플로팅 + 버튼 위)에 고정 배치함. .top이 transform을 갖고 있어 이 절대 위치는
    .top 기준으로 잡힘(플로팅 + 버튼과 같은 기준) */
 .tryBox-wrap .disclaimer {
-    position: absolute;
-    left: 20px;
-    right: 20px;
-    bottom: 148px;
-    margin: 0;
+    margin-top: 6px;
+    margin-bottom: 0;
 }
 
 .push-toggle-row {

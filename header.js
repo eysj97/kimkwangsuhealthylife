@@ -968,22 +968,45 @@
 
         const panel = document.querySelector(".panel-medicines");
         const grid = panel ? panel.querySelector(".medicine-grid") : null;
+
+        // localStorage에 예전에 저장해둔 값이 새 기본 데이터(HTML)보다 정보가 부족할 수 있어서
+        // (예: 나중에 퍼센트/함유량을 새로 채워넣은 제품), 이름이 같은 기본 타일을 찾아
+        // 저장된 값에 빠진 필드만 채워 넣음. 사용자가 직접 고친 값은 그대로 유지됨
+        const defaultsByName = {};
+        if (grid) {
+            grid.querySelectorAll(".medicine-tile").forEach((t) => {
+                defaultsByName[t.dataset.name] = {
+                    category: t.dataset.category || "",
+                    percent: t.dataset.percent || "",
+                    amount: t.dataset.amount || "",
+                    memo: t.dataset.memo || "",
+                };
+            });
+        }
         if (grid) grid.innerHTML = "";
 
         saved.forEach((m) => {
+            const def = defaultsByName[m.name];
+            const category = m.category || (def ? def.category : "");
+            const percent = m.percent || (def ? def.percent : "");
+            const amount = m.amount || (def ? def.amount : "");
+            const memo = m.memo || (def ? def.memo : "");
+
             addMedicineCard({
                 name: m.name,
-                category: m.category,
+                category,
                 dosage: m.dosage,
                 unit: m.unit,
                 quantity: Number(m.qty) || 0,
-                percent: m.percent,
-                amount: m.amount,
-                memo: m.memo,
+                percent,
+                amount,
+                memo,
                 photoUrl: m.photoUrl,
                 labelPhotoUrl: m.labelPhoto,
             });
         });
+
+        saveMedicinesToStorage();
     }
 
     function deleteMedicineTile(tile) {
