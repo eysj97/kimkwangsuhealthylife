@@ -1533,7 +1533,7 @@ label.menu {
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: var(--text);
+    background: var(--primary-mid);
     color: #fff;
     font-size: 26px;
     border: none;
