@@ -1222,7 +1222,7 @@
                             .map(
                                 ({ label, amount: amt }, i) => `
                                 <button type="button" class="detail-category-badge${amt ? "" : " no-amount"}" data-action="edit-amount" data-index="${i}">
-                                    ${escapeHtml(label)}${amt ? ` ${escapeHtml(amt)}` : ` <span class="badge-add-amount">함량 입력</span>`}
+                                    ${escapeHtml(label)}${amt ? ` <span class="badge-amount">${escapeHtml(amt)}</span>` : ` <span class="badge-add-amount">함량 입력</span>`}
                                 </button>`
                             )
                             .join("")}

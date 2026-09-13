@@ -583,7 +583,7 @@ body {
     height: 26px;
     padding: 0;
     border-radius: 50%;
-    background: var(--primary);
+    background: var(--primary-dark);
     color: #fff;
     border: none;
     font-family: inherit;
@@ -734,7 +734,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 16px 8px 7px;
+    padding: 16px 8px 17px;
     background: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0));
     color: #fff;
     font-size: 12px;
@@ -1194,7 +1194,7 @@ body {
 
 .detail-category-badge {
     display: inline-block;
-    background: var(--primary-dark);
+    background: var(--primary);
     color: #fff;
     font-size: 12px;
     font-weight: 700;
@@ -1203,6 +1203,10 @@ body {
     border: none;
     font-family: inherit;
     cursor: pointer;
+}
+
+.badge-amount {
+    color: var(--primary-dark);
 }
 
 .detail-category-badge.no-amount {
