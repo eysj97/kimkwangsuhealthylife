@@ -216,11 +216,6 @@ body {
 .calendar-day.selected {
     background: #fff;
     color: var(--primary-dark);
-    font-weight: 700;
-    min-width: 64px;
-    min-height: 64px;
-    border-radius: 50%;
-    padding: 16px 12px;
 }
 
 /* 가운데(오늘)는 선명하고 양 끝으로 갈수록 흐려지는 효과.
