@@ -11,7 +11,16 @@
     // 늦어서 처음 잰 값이 최종 값과 다를 수 있어, visualViewport를 우선 쓰고
     // 로드 직후 한동안은 반복해서 다시 재는 방식으로 보정함
     function getRealViewportHeight() {
-        return (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+        // 여러 방법으로 잰 값 중 가장 작은 값을 씀 - 실제보다 크게 재면(일부 인앱
+        // 브라우저/웹뷰에서 발생) 세로 기준으로 확대되면서 하단 네비 아래에
+        // 빈 공간이 남는 문제가 생기는데, 작은 값을 쓰면 그 반대(약간 덜 채움)라
+        // 배경색으로 자연스럽게 가릴 수 있는 안전한 쪽으로 치우침
+        const candidates = [
+            window.visualViewport && window.visualViewport.height,
+            window.innerHeight,
+            document.documentElement && document.documentElement.clientHeight,
+        ].filter((v) => typeof v === "number" && v > 0);
+        return candidates.length ? Math.min(...candidates) : 800;
     }
 
     function updateViewportHeightVar() {
