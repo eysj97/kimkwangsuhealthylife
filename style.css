@@ -14,12 +14,10 @@ button:focus {outline: none}
 
 
 :root {
-    --primary: #77A415;
-    --primary-dark: #013718;
-    --primary-mid: #025124;
-    --primary-light: #D0DE4B;
+    --primary: #498058;
+    --primary-dark: #053D20;
+    --primary-light: #A3CA60;
     --danger: #B80101;
-    --warning: #C97A1B;
     --bg: #ffffff;
     --card: #EFEFEF;
     --text: #303030;
@@ -310,7 +308,7 @@ body {
     color: var(--text-muted);
 }
 .boxGrap-inline .nutrient-fill{
-    background: var(--primary-mid);
+    background: var(--primary-dark);
 }
 .lineBasic{
     width: 60px;
@@ -333,7 +331,7 @@ body {
     right: 0;
     bottom: 0;
     height: 0%;
-    background: var(--primary-mid);
+    background: var(--primary-dark);
     transition: height 0.3s ease;
 }
 .lineBasic p{
@@ -470,8 +468,8 @@ body {
     justify-content: center;
 }
 .today-check.checked{
-    background: var(--primary-mid);
-    border-color: var(--primary-mid);
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
     color: #fff;
 }
 .today-item.show-remove .today-check{
@@ -546,7 +544,7 @@ body {
 }
 
 .condition-select:focus {
-    outline: 2px solid var(--primary-mid);
+    outline: 2px solid var(--primary-dark);
     border-color: var(--primary);
 }
 
@@ -799,7 +797,7 @@ body {
 
 .capture-slot.filled {
     border-style: solid;
-    border-color: var(--primary-mid);
+    border-color: var(--primary-dark);
 }
 
 .capture-slot-inner {
@@ -1123,7 +1121,7 @@ body {
 
 .ocr-scan-status {
     font-size: 12px;
-    color: var(--primary-mid);
+    color: var(--primary-dark);
     margin-bottom: 8px;
     display: flex;
     align-items: center;
@@ -1137,7 +1135,7 @@ body {
     flex-shrink: 0;
     border-radius: 50%;
     border: 2px solid var(--border);
-    border-top-color: var(--primary-mid);
+    border-top-color: var(--primary-dark);
     animation: ocr-spin 0.7s linear infinite;
 }
 
@@ -1188,7 +1186,7 @@ body {
 
 .detail-category-badge {
     display: inline-block;
-    background: var(--primary-mid);
+    background: var(--primary-dark);
     color: #fff;
     font-size: 12px;
     font-weight: 700;
@@ -1302,7 +1300,7 @@ body {
 }
 
 .nutri-pill.active {
-    background: var(--primary-mid);
+    background: var(--primary-dark);
     color: #fff;
 }
 
@@ -1385,7 +1383,7 @@ body {
 }
 
 .nutrient-bar-fill.active {
-    background: var(--primary-mid);
+    background: var(--primary-dark);
 }
 
 .nutrient-bar-label {
@@ -1419,7 +1417,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: conic-gradient(var(--primary-mid) calc(min(var(--pct), 100) * 1%), var(--border) 0);
+    background: conic-gradient(var(--primary-dark) calc(min(var(--pct), 100) * 1%), var(--border) 0);
 }
 
 .nutri-ring.over {
@@ -1540,7 +1538,7 @@ label.menu {
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: var(--primary-mid);
+    background: var(--primary-dark);
     color: #fff;
     font-size: 26px;
     border: none;
