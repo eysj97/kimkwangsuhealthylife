@@ -23,7 +23,15 @@
         return candidates.length ? Math.min(...candidates) : 800;
     }
 
+    // 100dvh를 지원하는 브라우저(iOS 15.4+ 등 요즘 거의 전부)는 홈 화면 아이콘으로
+    // 실행한 standalone 모드까지 포함해서 실제 화면 높이를 브라우저가 직접 정확히
+    // 계산해주므로, 그걸 그대로 믿는 게 JS로 잰 값(타이밍에 따라 실제보다 작게
+    // 측정되어 네비 아래 빈 공간이 생기는 원인이 됨)보다 더 정확함. dvh를 지원하면
+    // --vh100을 아예 덮어쓰지 않고 CSS의 100dvh 기본값이 쓰이게 둠.
+    const supportsDvh = window.CSS && CSS.supports && CSS.supports("height", "100dvh");
+
     function updateViewportHeightVar() {
+        if (supportsDvh) return;
         document.documentElement.style.setProperty("--vh100", getRealViewportHeight() + "px");
     }
     updateViewportHeightVar();
