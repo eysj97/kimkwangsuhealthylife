@@ -502,12 +502,16 @@ body {
 #rec-results{margin-top: 10px;}
 #rec-results .card{background: #fff; margin-bottom: 8px;}
 .rec-add-btn{
-    padding: 4px 10px;
-    border-radius: 12px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
     background: var(--primary-light);
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 700;
-    line-height: 1.6;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
 }
 
