@@ -14,9 +14,9 @@ button:focus {outline: none}
 
 
 :root {
-    --primary: #025124;
+    --primary: #77A415;
     --primary-dark: #013718;
-    --primary-mid: #77A415;
+    --primary-mid: #025124;
     --primary-light: #D0DE4B;
     --danger: #B80101;
     --warning: #C97A1B;
