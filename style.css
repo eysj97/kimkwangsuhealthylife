@@ -126,7 +126,7 @@ body {
 #menu-home:checked ~ .menu label[for="menu-home"],
 #menu-medicines:checked ~ .menu label[for="menu-medicines"],
 #menu-nutrition:checked ~ .menu label[for="menu-nutrition"] {
-    color: var(--primary);
+    color: var(--primary-dark);
     font-weight: 700;
 }
 
@@ -209,14 +209,15 @@ body {
     font-size: 16px;
     font-weight: 400;
     border-radius: 45%;
-    padding: 16px 22px;
+    width: 58px;
+    height: 51px;
     overflow: hidden;
 }
 
 .calendar-day.selected {
     background: #fff;
     color: var(--primary-dark);
-    min-width: 72px;
+    width: 72px;
     height: 51px;
     border-radius: 45%;
 }
@@ -496,7 +497,7 @@ body {
     gap: 8px;
 }
 .button button{background: var(--primary-light); padding: 4px 8px; border-radius: 12px; font-size: 12px;}
-.button button.active{background: var(--primary); color: #fff;}
+.button button.active{background: var(--primary-dark); color: #fff;}
 
 #rec-results{margin-top: 10px;}
 #rec-results .card{background: #fff; margin-bottom: 8px;}
@@ -650,7 +651,7 @@ body {
 }
 
 .push-toggle[aria-checked="true"] {
-    background: var(--primary);
+    background: var(--primary-dark);
 }
 
 .push-toggle[aria-checked="true"] .push-toggle-knob {
@@ -1019,7 +1020,7 @@ body {
 }
 
 .detail-thumb.active {
-    border-color: var(--primary);
+    border-color: var(--primary-dark);
 }
 
 .detail-thumb img {
@@ -1524,7 +1525,7 @@ label.menu {
 }
 
 #menu-home:checked ~ .menu label[for="menu-home"] .menu-home-circle {
-    background: var(--primary);
+    background: var(--primary-dark);
 }
 
 .menu-home-circle .menu-icon {

@@ -215,13 +215,6 @@
             const offset = Number(day.dataset.offset);
             const dist = Math.abs(offset - centerOffset);
             day.classList.remove("selected");
-
-            // "오늘" 칸은 중앙에 있을 때만 "오늘"이라고 쓰고, 중앙에서 벗어나면
-            // 다른 요일들처럼 그냥 요일 글자로 바꿔서 크기/모양도 똑같아지게 함
-            if (offset === 0) {
-                day.textContent = dist === 0 ? "오늘" : DAY_LABELS[new Date().getDay()];
-            }
-
             if (dist === 0) {
                 day.classList.add("selected");
                 day.style.opacity = "";
