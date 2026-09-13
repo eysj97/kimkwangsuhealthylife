@@ -310,7 +310,7 @@ body {
     color: var(--text-muted);
 }
 .boxGrap-inline .nutrient-fill{
-    background: var(--primary);
+    background: var(--primary-mid);
 }
 .lineBasic{
     width: 60px;
@@ -333,7 +333,7 @@ body {
     right: 0;
     bottom: 0;
     height: 0%;
-    background: var(--primary-light);
+    background: var(--primary-mid);
     transition: height 0.3s ease;
 }
 .lineBasic p{
@@ -470,8 +470,8 @@ body {
     justify-content: center;
 }
 .today-check.checked{
-    background: var(--primary);
-    border-color: var(--primary);
+    background: var(--primary-mid);
+    border-color: var(--primary-mid);
     color: #fff;
 }
 .today-item.show-remove .today-check{
@@ -500,16 +500,12 @@ body {
 #rec-results{margin-top: 10px;}
 #rec-results .card{background: #fff; margin-bottom: 8px;}
 .rec-add-btn{
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: #fff;
-    font-size: 15px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: var(--primary-light);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.6;
     flex-shrink: 0;
 }
 
@@ -577,8 +573,19 @@ body {
 }
 
 .rec-status.safe {
-    background: var(--primary-light);
-    color: var(--primary-mid);
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .rec-status.muted {
@@ -1412,7 +1419,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: conic-gradient(var(--primary) calc(min(var(--pct), 100) * 1%), var(--border) 0);
+    background: conic-gradient(var(--primary-mid) calc(min(var(--pct), 100) * 1%), var(--border) 0);
 }
 
 .nutri-ring.over {

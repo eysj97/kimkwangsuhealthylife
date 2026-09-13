@@ -138,6 +138,54 @@
         "관절 통증": ["오메가3", "글루코사민"],
     };
 
+    // ---------- 같이 복용하면 주의가 필요한 영양소 조합 ----------
+    // 오늘 두 성분을 모두 체크(복용)하면 팝업으로 안내함. 의학적 진단이 아니라
+    // 일반적으로 알려진 주의사항 안내이며, 항상 전문가 상담을 권함
+    const INTERACTION_PAIRS = [
+        {
+            a: "엽산",
+            b: "비타민B12",
+            note: "엽산을 고용량으로 먹으면 비타민B12 부족 증상이 가려질 수 있어요. 두 가지를 함께 드신다면 비타민B12도 충분한지 같이 챙겨보는 게 좋아요.",
+        },
+        {
+            a: "비타민A",
+            b: "멀티비타민",
+            note: "멀티비타민에도 비타민A가 포함된 경우가 많아요. 비타민A 제품과 함께 드시면 하루 섭취량이 필요 이상으로 많아질 수 있으니 각 제품의 함유량을 확인해보세요.",
+        },
+        {
+            a: "마그네슘",
+            b: "비타민A",
+            note: "이런 조합은 흔치 않지만, 여러 영양제를 한꺼번에 드실 때는 성분이 겹치지 않는지 한 번씩 확인해보는 게 좋아요.",
+        },
+    ];
+
+    function findInteractionWarning(categoriesA, categoriesB) {
+        for (const pair of INTERACTION_PAIRS) {
+            const aHas = categoriesA.includes(pair.a) && categoriesB.includes(pair.b);
+            const bHas = categoriesA.includes(pair.b) && categoriesB.includes(pair.a);
+            if (aHas || bHas) return pair;
+        }
+        return null;
+    }
+
+    function showInteractionWarningModal(nameA, nameB, note) {
+        const host = document.querySelector(".top") || document.body;
+        const overlay = document.createElement("div");
+        overlay.className = "push-permission-overlay";
+        overlay.innerHTML = `
+            <div class="push-permission-sheet">
+                <div class="push-permission-icon">⚠️</div>
+                <h3>${escapeHtml(nameA)} + ${escapeHtml(nameB)}</h3>
+                <p>${escapeHtml(note)} 정확한 복용 방법은 의사·약사와 상담하세요.</p>
+                <div class="push-permission-sheet-actions">
+                    <button type="button" data-action="push-allow">확인했어요</button>
+                </div>
+            </div>
+        `;
+        host.appendChild(overlay);
+        overlay.querySelector("[data-action='push-allow']").addEventListener("click", () => overlay.remove());
+    }
+
     // ---------- 주간 캘린더: 가로 스크롤로 날짜 이동, 가운데 온 날짜가 자동 선택됨 ----------
     const CALENDAR_RANGE = 14; // 오늘 기준 앞뒤로 렌더링할 일수
 
@@ -217,15 +265,21 @@
 
         // 스크롤 중 가운데로 온 날짜를 실시간으로 선택/캡션 갱신
         let scrollTicking = false;
+        const syncCenteredDay = () => {
+            const centered = findCenteredDay(weekEl);
+            if (centered) updateCalendarSelection(Number(centered.dataset.offset));
+        };
         weekEl.addEventListener("scroll", () => {
             if (scrollTicking) return;
             scrollTicking = true;
             requestAnimationFrame(() => {
                 scrollTicking = false;
-                const centered = findCenteredDay(weekEl);
-                if (centered) updateCalendarSelection(Number(centered.dataset.offset));
+                syncCenteredDay();
             });
         });
+        // 관성 스크롤 + scroll-snap 조합에서는 마지막 scroll 이벤트가 스냅이 완전히
+        // 자리잡기 전에 멈출 수 있어서, 스크롤이 진짜로 끝난 시점에 한 번 더 보정함
+        weekEl.addEventListener("scrollend", syncCenteredDay);
 
         // 터치/트랙패드 없이 마우스로만 쓰는 환경에서도 좌우로 끌어서 스크롤 가능하게
         let isDragging = false;
@@ -1353,6 +1407,21 @@
             applyNutrientIntake(category, percent, checked);
             adjustStock(name, !checked);
 
+            if (checked && category) {
+                const myCategories = category.split(",").map((s) => s.trim()).filter(Boolean);
+                const otherChecked = Array.from(document.querySelectorAll(".today-item"))
+                    .filter((el) => el !== item && el.querySelector(".today-check").classList.contains("checked"));
+                for (const other of otherChecked) {
+                    const otherCategories = (other.dataset.category || "").split(",").map((s) => s.trim()).filter(Boolean);
+                    const warning = findInteractionWarning(myCategories, otherCategories);
+                    if (warning) {
+                        const otherName = other.querySelector(".today-item-name").textContent;
+                        showInteractionWarningModal(name, otherName, warning.note);
+                        break;
+                    }
+                }
+            }
+
             if (timeEl) {
                 if (checked) {
                     const now = new Date();
@@ -1487,7 +1556,7 @@
                             <span class="rec-name">${escapeHtml(productName)} <span class="rec-nutrient-tag">${escapeHtml(nutrient)}</span></span>
                             ${
                                 added
-                                    ? `<span class="rec-status safe">✓ 추가됨</span>`
+                                    ? `<button type="button" class="rec-status safe" data-remove-name="${escapeHtml(productName)}" aria-label="추가됨, 눌러서 빼기">✓</button>`
                                     : `<button type="button" class="rec-add-btn" data-add-name="${escapeHtml(productName)}">+</button>`
                             }
                         </div>`;
@@ -1504,6 +1573,31 @@
                 renderRecResults(condition);
             });
         });
+        resultsEl.querySelectorAll("[data-remove-name]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                removeTodayItemByName(btn.dataset.removeName);
+                renderRecResults(condition);
+            });
+        });
+    }
+
+    // 추천받기 결과의 "추가됨" 배지를 다시 누르면 확인창 없이 바로 빼줌(+버튼의 반대 동작)
+    function removeTodayItemByName(name) {
+        const item = Array.from(document.querySelectorAll(".today-item")).find(
+            (el) => el.classList.contains("today-item-removable") && el.querySelector(".today-item-name").textContent === name
+        );
+        if (!item) return;
+
+        if (item.querySelector(".today-check").classList.contains("checked")) {
+            applyNutrientIntake(item.dataset.category, item.dataset.percent, false);
+        }
+        item.remove();
+
+        const remaining = document.querySelectorAll(".today-item-removable").length;
+        const imgBox = document.querySelector(".today .imgBox");
+        if (remaining === 0 && imgBox) imgBox.style.visibility = "visible";
+
+        saveTodayToStorage();
     }
 
     function wireConditionButtons() {
