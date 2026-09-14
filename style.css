@@ -240,7 +240,7 @@ body {
     background: var(--card);
     border-radius: 14px;
     overflow: hidden;
-    padding-bottom: 22px;
+    padding-bottom: 18px;
     color: inherit;
     text-decoration: none;
 }
