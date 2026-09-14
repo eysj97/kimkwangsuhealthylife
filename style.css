@@ -701,6 +701,19 @@ body {
     color: var(--text);
 }
 
+.push-toggle-row span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.row-title-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
 .push-toggle {
     width: 46px;
     height: 26px;
@@ -735,6 +748,9 @@ body {
     padding: 4px 4px 24px;
 }
 .sync-row-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 13px;
     font-weight: 700;
     color: var(--text);
