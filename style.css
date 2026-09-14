@@ -182,24 +182,121 @@ body {
     mask-position: center;
 }
 
-.shop-empty {
-    text-align: center;
-    padding: 100px 20px 0;
+/* 스토어 */
+.store-header {
+    padding: 4px 0 14px;
 }
-.shop-empty-icon {
-    font-size: 40px;
-    margin-bottom: 12px;
+.store-title {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.3;
+    color: var(--text);
+    margin-bottom: 14px;
 }
-.shop-empty-title {
-    font-size: 17px;
+.store-search {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--card);
+}
+
+.store-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 14px;
+}
+.store-tabs::-webkit-scrollbar {
+    display: none;
+}
+.store-tab {
+    flex-shrink: 0;
+    background: var(--card);
+    color: var(--text-muted);
+    font-size: 13px;
     font-weight: 700;
-    color: var(--primary-dark);
+    padding: 8px 16px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+.store-tab.active {
+    background: var(--primary-dark);
+    color: #fff;
+}
+
+.store-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.store-card {
+    text-align: left;
+    background: var(--card);
+    border-radius: 16px;
+    overflow: hidden;
+    padding-bottom: 10px;
+}
+.store-card-img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    font-size: 40px;
     margin-bottom: 8px;
 }
-.shop-empty-desc {
+.store-card-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    padding: 0 10px;
     font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    min-height: 34px;
+    margin-bottom: 4px;
+}
+.store-card-price {
+    display: block;
+    padding: 0 10px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--primary-dark);
+}
+.store-empty {
+    grid-column: 1 / -1;
+    text-align: center;
     color: var(--text-muted);
-    line-height: 1.6;
+    font-size: 13px;
+    padding: 40px 0;
+}
+
+.store-detail-tag {
+    display: inline-block;
+    background: var(--card);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+}
+.store-detail-price {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin: 6px 0 20px;
+}
+.store-buy-btn {
+    display: block;
+    text-align: center;
+    text-decoration: none;
 }
 
 /* 헤더 */

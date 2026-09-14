@@ -1853,10 +1853,138 @@
         overlay.querySelector("[data-close]").addEventListener("click", closeTodayPickerOverlay);
     }
 
+    // ---------- 스토어: 실제 다이소몰에서 판매 중인 건강기능식품으로 연결 ----------
+    const STORE_PRODUCTS = [
+        {
+            id: "multivit",
+            name: "대웅제약 멀티비타민 미네랄 30정",
+            tag: "멀티비타민",
+            price: 5000,
+            emoji: "💊",
+            color: "#498058",
+            desc: "여러 비타민과 미네랄을 한 번에 보충할 수 있는 기초 건강 제품이에요. 30일분으로 하루 한 정씩 먹기 좋아요.",
+            url: "https://www.daisomall.co.kr/pd/pdr/SCR_PDR_0001?pdNo=600000135",
+        },
+        {
+            id: "camgvd",
+            name: "대웅제약 칼슘 마그네슘 비타민D 60정",
+            tag: "마그네슘",
+            price: 5000,
+            emoji: "🦴",
+            color: "#A3CA60",
+            desc: "칼슘·마그네슘은 뼈와 근육 건강에, 비타민D는 칼슘 흡수에 도움을 줘요. 30일분(하루 2정) 구성이에요.",
+            url: "https://www.daisomall.co.kr/pd/pdr/SCR_PDR_0001?pdNo=600000148",
+        },
+        {
+            id: "milkthistle",
+            name: "대웅제약 밀크씨슬 30정",
+            tag: "밀크씨슬",
+            price: 5000,
+            emoji: "🌿",
+            color: "#053D20",
+            desc: "밀크씨슬(실리마린)은 간 세포를 보호하고 간 기능 회복에 도움을 줄 수 있어요.",
+            url: "https://www.daisomall.co.kr/pd/pdr/SCR_PDR_0001?pdNo=600000134",
+        },
+        {
+            id: "omega3",
+            name: "대웅제약 rTG 오메가3 30캡슐",
+            tag: "오메가3",
+            price: 5000,
+            emoji: "🐟",
+            color: "#2f6b46",
+            desc: "혈중 중성지방을 줄이고 혈행 개선에 도움을 줄 수 있는, 흡수율 높은 rTG 형태 오메가3예요.",
+            url: "https://www.daisomall.co.kr/pd/pdr/SCR_PDR_0001?pdNo=600000145",
+        },
+    ];
+
+    function renderStoreGrid(activeTag, keyword) {
+        const grid = document.getElementById("store-grid");
+        if (!grid) return;
+        const kw = (keyword || "").trim().toLowerCase();
+        const items = STORE_PRODUCTS.filter(
+            (p) => (activeTag === "전체" || p.tag === activeTag) && p.name.toLowerCase().includes(kw)
+        );
+        grid.innerHTML =
+            items
+                .map(
+                    (p) => `
+            <button type="button" class="store-card" data-id="${p.id}">
+                <span class="store-card-img" style="background:${p.color}">${p.emoji}</span>
+                <span class="store-card-name">${escapeHtml(p.name)}</span>
+                <span class="store-card-price">${p.price.toLocaleString()}원</span>
+            </button>`
+                )
+                .join("") || `<div class="store-empty">검색 결과가 없어요</div>`;
+
+        grid.querySelectorAll(".store-card").forEach((card) => {
+            card.addEventListener("click", () => openStoreDetail(card.dataset.id));
+        });
+    }
+
+    function openStoreDetail(id) {
+        const p = STORE_PRODUCTS.find((x) => x.id === id);
+        if (!p) return;
+        closeStoreDetail();
+        const host = document.querySelector(".top") || document.body;
+        const overlay = document.createElement("div");
+        overlay.className = "detail-overlay";
+        overlay.id = "store-detail-overlay";
+        overlay.innerHTML = `
+            <div class="detail-hero" style="background:${p.color}">
+                <button type="button" class="detail-icon-btn detail-back" data-close><img class="detail-back-icon" src="images/icon-return.png" alt="뒤로"></button>
+                <span class="detail-hero-placeholder">${p.emoji}</span>
+            </div>
+            <div class="detail-body">
+                <h2 class="detail-view-name">${escapeHtml(p.name)}</h2>
+                <span class="store-detail-tag">${escapeHtml(p.tag)}</span>
+                <div class="store-detail-price">${p.price.toLocaleString()}원</div>
+                <div class="detail-view-memo">
+                    <div class="detail-view-memo-title">제품 안내</div>
+                    <p>${escapeHtml(p.desc)}</p>
+                </div>
+                <a class="detail-submit store-buy-btn" href="${p.url}" target="_blank" rel="noopener noreferrer">다이소몰에서 구매하기</a>
+            </div>
+        `;
+        host.appendChild(overlay);
+        overlay.querySelector("[data-close]").addEventListener("click", closeStoreDetail);
+    }
+
+    function closeStoreDetail() {
+        const el = document.getElementById("store-detail-overlay");
+        if (el) el.remove();
+    }
+
+    function wireStore() {
+        const tabsEl = document.getElementById("store-tabs");
+        const searchEl = document.getElementById("store-search");
+        if (!tabsEl || !searchEl) return;
+
+        const tags = ["전체", ...new Set(STORE_PRODUCTS.map((p) => p.tag))];
+        tabsEl.innerHTML = tags
+            .map((t, i) => `<button type="button" class="store-tab${i === 0 ? " active" : ""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`)
+            .join("");
+
+        let activeTag = "전체";
+        tabsEl.querySelectorAll(".store-tab").forEach((tab) => {
+            tab.addEventListener("click", () => {
+                tabsEl.querySelectorAll(".store-tab").forEach((t) => t.classList.remove("active"));
+                tab.classList.add("active");
+                activeTag = tab.dataset.tag;
+                renderStoreGrid(activeTag, searchEl.value);
+            });
+        });
+
+        searchEl.addEventListener("input", () => renderStoreGrid(activeTag, searchEl.value));
+
+        renderStoreGrid(activeTag, "");
+    }
+
     function init() {
         renderCalendar();
         const boxGrap = document.querySelector(".boxGrap");
         if (boxGrap) boxGrap.addEventListener("click", handleBoxGrapClick);
+
+        wireStore();
 
         showRandomWaitingMascot();
         const homeMenuRadio = document.getElementById("menu-home");

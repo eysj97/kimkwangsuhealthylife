@@ -281,13 +281,15 @@
                 </div>
             </section>
 
-            <!-- ===================== 영양제 구매 (준비 중) ===================== -->
+            <!-- ===================== 스토어 ===================== -->
             <section class="panel panel-shop">
-                <div class="shop-empty">
-                    <div class="shop-empty-icon">🛒</div>
-                    <div class="shop-empty-title">곧 만나요!</div>
-                    <p class="shop-empty-desc">영양제를 바로 구매할 수 있는 공간을<br>준비하고 있어요.</p>
+                <div class="store-header">
+                    <div class="store-title">믿을 수 있는<br>영양제 스토어</div>
+                    <input type="text" id="store-search" class="store-search" placeholder="영양제 검색">
                 </div>
+                <div class="store-tabs" id="store-tabs"></div>
+                <div class="store-grid" id="store-grid"></div>
+                <p class="disclaimer">* 실제 판매처(다이소몰)로 연결되며, 구매·배송·재고는 판매처 정책을 따릅니다.</p>
             </section>
         </main>
 
@@ -300,7 +302,7 @@
                 <button type="button" class="nav-fab" id="nav-fab-btn" title="추가"><span class="nav-fab-icon">+</span></button>
             </div>
             <label class="menu" for="menu-nutrition"><img class="menu-icon" src="images/icon-chart.png" alt=""><span class="menu-label-text">건강상태</span></label>
-            <label class="menu" for="menu-shop"><span class="menu-icon icon-cart-mask" role="img" aria-label="장바구니"></span><span class="menu-label-text">장바구니</span></label>
+            <label class="menu" for="menu-shop"><span class="menu-icon icon-cart-mask" role="img" aria-label="스토어"></span><span class="menu-label-text">스토어</span></label>
         </nav>
     </div>
 
