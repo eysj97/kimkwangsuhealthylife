@@ -1960,17 +1960,13 @@
             items
                 .map(
                     (p) => `
-            <button type="button" class="store-card" data-id="${p.pdNo}">
+            <a class="store-card" href="${p.url}" target="_blank" rel="noopener noreferrer">
                 <span class="store-card-img"><img src="${p.image}" alt="" loading="lazy"></span>
                 <span class="store-card-name">${escapeHtml(p.name)}</span>
                 <span class="store-card-price">${p.price.toLocaleString()}원</span>
-            </button>`
+            </a>`
                 )
                 .join("") || `<div class="store-empty">검색 결과가 없어요</div>`;
-
-        grid.querySelectorAll(".store-card").forEach((card) => {
-            card.addEventListener("click", () => openStoreDetail(card.dataset.id));
-        });
 
         if (pager) {
             pager.innerHTML =
@@ -1986,36 +1982,6 @@
                 });
             });
         }
-    }
-
-    function openStoreDetail(pdNo) {
-        const p = STORE_PRODUCTS.find((x) => x.pdNo === pdNo);
-        if (!p) return;
-        closeStoreDetail();
-        const host = document.querySelector(".top") || document.body;
-        const overlay = document.createElement("div");
-        overlay.className = "detail-overlay";
-        overlay.id = "store-detail-overlay";
-        overlay.innerHTML = `
-            <div class="detail-hero">
-                <button type="button" class="detail-icon-btn detail-back" data-close><img class="detail-back-icon" src="images/icon-return.png" alt="뒤로"></button>
-                <img class="detail-hero-image store-detail-hero-image" src="${p.image}" alt="${escapeHtml(p.name)}">
-            </div>
-            <div class="detail-body">
-                <h2 class="detail-view-name">${escapeHtml(p.name)}</h2>
-                <span class="store-detail-tag">${escapeHtml(p.tag)}</span>
-                <div class="store-detail-rating">★ ${escapeHtml(p.rating)} (${Number(p.reviews).toLocaleString()}개 리뷰)</div>
-                <div class="store-detail-price">${p.price.toLocaleString()}원</div>
-                <a class="detail-submit store-buy-btn" href="${p.url}" target="_blank" rel="noopener noreferrer">다이소몰에서 구매하기</a>
-            </div>
-        `;
-        host.appendChild(overlay);
-        overlay.querySelector("[data-close]").addEventListener("click", closeStoreDetail);
-    }
-
-    function closeStoreDetail() {
-        const el = document.getElementById("store-detail-overlay");
-        if (el) el.remove();
     }
 
     function wireStore() {
