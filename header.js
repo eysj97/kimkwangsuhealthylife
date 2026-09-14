@@ -1048,7 +1048,7 @@
         if (!grid) {
             grid = document.createElement("div");
             grid.className = "medicine-grid";
-            panel.insertBefore(grid, panel.querySelector(".fab"));
+            panel.appendChild(grid);
         }
 
         const label = category || name;
@@ -1814,15 +1814,18 @@
         wireWeekNav();
         refreshNutritionAnalysis();
 
-        const homeFab = document.querySelector(".panel-home .fab");
-        if (homeFab) {
-            homeFab.setAttribute("title", "오늘 먹을 영양제 추가");
-            homeFab.addEventListener("click", openTodayPickerOverlay);
-        }
-        const medicinesFab = document.querySelector(".panel-medicines .fab");
-        if (medicinesFab) {
-            medicinesFab.setAttribute("title", "영양제 등록");
-            medicinesFab.addEventListener("click", openCaptureOverlay);
+        // 네비 중앙의 + 버튼은 탭마다 다른 동작을 함: 영양제 탭에서는 새 영양제 등록,
+        // 그 외(홈 포함)에서는 오늘 먹을 영양제 추가
+        const navFabBtn = document.getElementById("nav-fab-btn");
+        if (navFabBtn) {
+            navFabBtn.addEventListener("click", () => {
+                const medicinesTabActive = document.getElementById("menu-medicines").checked;
+                if (medicinesTabActive) {
+                    openCaptureOverlay();
+                } else {
+                    openTodayPickerOverlay();
+                }
+            });
         }
 
         const medicinesPanel = document.querySelector(".panel-medicines");

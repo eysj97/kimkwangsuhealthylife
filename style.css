@@ -134,6 +134,7 @@ body {
     font-weight: 700;
 }
 
+#menu-home:checked ~ .menu label[for="menu-home"] .menu-icon,
 #menu-medicines:checked ~ .menu label[for="menu-medicines"] .menu-icon,
 #menu-nutrition:checked ~ .menu label[for="menu-nutrition"] .menu-icon,
 #menu-shop:checked ~ .menu label[for="menu-shop"] .menu-icon {
@@ -1547,44 +1548,22 @@ label.menu {
     filter: grayscale(1) brightness(1.9);
 }
 
-.menu-home-circle {
+/* 네비 중앙의 추가 버튼 — 탭이 아니라 항상 위로 떠 있는 액션 버튼 */
+.nav-fab {
+    flex-shrink: 0;
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: var(--text-muted);
+    background: var(--primary-dark);
     color: #fff;
+    font-size: 28px;
+    line-height: 1;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
-    margin-top: -54px;
-}
-
-#menu-home:checked ~ .menu label[for="menu-home"] .menu-home-circle {
-    background: var(--primary-dark);
-}
-
-.menu-home-circle .menu-icon {
-    width: 24px;
-    height: 24px;
-    filter: brightness(0) invert(1);
-}
-
-/* 플로팅 추가 버튼 */
-.fab {
-    position: absolute;
-    right: 20px;
-    bottom: 98px;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: var(--primary-dark);
-    color: #fff;
-    font-size: 26px;
-    border: none;
+    margin-top: -30px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
     cursor: pointer;
-    z-index: 20;
 }
 
 /* 영양소 캡슐 클릭 시 뜨는 설명 팝업 */
@@ -1730,7 +1709,7 @@ label.menu {
     .nutrient-gap-name { font-size: calc(14px + 2px); }
     .nutrient-gap-hint { font-size: calc(12px + 2px); }
     label.menu { font-size: calc(11px + 2px); }
-    .fab { font-size: calc(26px + 2px); }
+    .nav-fab { font-size: calc(28px + 2px); }
     .nutrient-info-sheet h3 { font-size: calc(17px + 2px); }
     .nutrient-info-sheet p { font-size: calc(13px + 2px); }
     .nutrient-info-sheet button { font-size: calc(14px + 2px); }
