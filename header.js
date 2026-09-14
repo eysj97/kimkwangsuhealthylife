@@ -1682,24 +1682,53 @@
         });
     }
 
-    // ---------- 건강상태: 주차 이동 (표시용, 실제 데이터는 바뀌지 않음) ----------
+    // ---------- 건강상태: 주차 이동 (실제 날짜 기준, 월~일이 한 주) ----------
+    // 주어진 날짜가 속한 주의 월요일을 구함
+    function mondayOf(date) {
+        const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const day = d.getDay(); // 0=일 ... 6=토
+        const diff = day === 0 ? -6 : 1 - day;
+        d.setDate(d.getDate() + diff);
+        return d;
+    }
+
+    // 월요일 날짜를 받아 "그 월요일이 속한 달의 몇 번째 월~일 주"인지 계산.
+    // 그 달 1일이 포함된 주가 전달로 걸치면(1일이 월요일이 아니면) 그 주는
+    // 전달 마지막 주로 치고, 다음 월요일부터를 이 달 1주차로 침
+    function getWeekLabel(monday) {
+        const month = monday.getMonth();
+        const year = monday.getFullYear();
+        let firstMonday = mondayOf(new Date(year, month, 1));
+        if (firstMonday.getMonth() !== month) {
+            firstMonday = new Date(firstMonday);
+            firstMonday.setDate(firstMonday.getDate() + 7);
+        }
+        const week = Math.round((monday - firstMonday) / (7 * 24 * 60 * 60 * 1000)) + 1;
+        return { month: month + 1, week };
+    }
+
     function wireWeekNav() {
         const titleEl = document.getElementById("nutri-week-title");
         if (!titleEl) return;
-        let week = 2;
+        let currentMonday = mondayOf(new Date());
 
         function render() {
-            titleEl.textContent = `9월 ${week}주차`;
+            const { month, week } = getWeekLabel(currentMonday);
+            titleEl.textContent = `${month}월 ${week}주차`;
         }
 
         document.querySelector('[data-action="week-prev"]').addEventListener("click", () => {
-            week = week <= 1 ? 4 : week - 1;
+            currentMonday = new Date(currentMonday);
+            currentMonday.setDate(currentMonday.getDate() - 7);
             render();
         });
         document.querySelector('[data-action="week-next"]').addEventListener("click", () => {
-            week = week >= 4 ? 1 : week + 1;
+            currentMonday = new Date(currentMonday);
+            currentMonday.setDate(currentMonday.getDate() + 7);
             render();
         });
+
+        render();
     }
 
     function deleteTodayItem(item) {
