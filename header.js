@@ -1978,7 +1978,11 @@
             pager.querySelectorAll(".store-page-btn").forEach((btn) => {
                 btn.addEventListener("click", () => {
                     renderStoreGrid(activeTag, keyword, Number(btn.dataset.page));
-                    grid.scrollIntoView({ behavior: "smooth", block: "start" });
+                    // scrollIntoView()는 .top의 overflow:hidden까지 스크롤 대상으로
+                    // 잡아서 헤더가 화면 밖으로 밀려나는 문제가 있어, 실제 스크롤 컨테이너
+                    // (.view)만 직접 맨 위로 되돌림
+                    const scrollContainer = grid.closest(".view");
+                    if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
                 });
             });
         }
