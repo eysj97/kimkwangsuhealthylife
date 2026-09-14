@@ -1431,21 +1431,6 @@
             applyNutrientIntake(category, percent, checked);
             adjustStock(name, !checked);
 
-            if (checked && category) {
-                const myCategories = category.split(",").map((s) => s.trim()).filter(Boolean);
-                const otherChecked = Array.from(document.querySelectorAll(".today-item"))
-                    .filter((el) => el !== item && el.querySelector(".today-check").classList.contains("checked"));
-                for (const other of otherChecked) {
-                    const otherCategories = (other.dataset.category || "").split(",").map((s) => s.trim()).filter(Boolean);
-                    const warning = findInteractionWarning(myCategories, otherCategories);
-                    if (warning) {
-                        const otherName = other.querySelector(".today-item-name").textContent;
-                        showInteractionWarningModal(name, otherName, warning.note);
-                        break;
-                    }
-                }
-            }
-
             if (timeEl) {
                 if (checked) {
                     const now = new Date();
@@ -1461,7 +1446,7 @@
         });
     }
 
-    function addTodayItem(name) {
+    function addTodayItem(name, notifyInteraction) {
         const list = document.querySelector(".today-list");
         if (!list) return;
 
@@ -1486,6 +1471,23 @@
 
         const imgBox = document.querySelector(".today .imgBox");
         if (imgBox) imgBox.style.visibility = "hidden";
+
+        // 복용 체크 시점이 아니라, 오늘의 영양제 목록에 "포함"시키는 시점(추천받기 +,
+        // 오늘 먹을 영양제 추가 팝업)에 다른 항목과의 상호작용을 바로 알려줌. 저장된
+        // 데이터를 복원할 때(notifyInteraction === false)는 매번 다시 뜨지 않게 건너뜀
+        if (notifyInteraction !== false && category) {
+            const myCategories = category.split(",").map((s) => s.trim()).filter(Boolean);
+            const others = Array.from(document.querySelectorAll(".today-item")).filter((el) => el !== item);
+            for (const other of others) {
+                const otherCategories = (other.dataset.category || "").split(",").map((s) => s.trim()).filter(Boolean);
+                const warning = findInteractionWarning(myCategories, otherCategories);
+                if (warning) {
+                    const otherName = other.querySelector(".today-item-name").textContent;
+                    showInteractionWarningModal(name, otherName, warning.note);
+                    break;
+                }
+            }
+        }
 
         saveTodayToStorage();
         return item;
@@ -1524,7 +1526,7 @@
         saved.forEach((s) => {
             let item;
             if (s.removable) {
-                item = addTodayItem(s.name);
+                item = addTodayItem(s.name, false);
             } else {
                 item = Array.from(document.querySelectorAll(".today-item")).find(
                     (el) => !el.classList.contains("today-item-removable") && el.querySelector(".today-item-name").textContent === s.name
