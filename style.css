@@ -50,7 +50,7 @@ body {
     position: fixed;
     inset: 0;
     z-index: -1;
-    background: linear-gradient(to bottom, var(--primary) 0 14%, var(--bg) 14% 90%, var(--card) 90% 100%);
+    background: linear-gradient(to bottom, var(--primary) 0 14%, var(--bg) 14% 100%);
 }
 
 /* 디자인 기준 크기는 430x932(아이폰 프로맥스 비율)로 고정하고, 비율을 유지한 채
@@ -107,11 +107,13 @@ body {
 }
 
 .panel-medicines,
-.panel-nutrition {
+.panel-nutrition,
+.panel-shop {
     padding: 0 20px;
 }
 
-.panel-nutrition {
+.panel-nutrition,
+.panel-shop {
     padding-top: 14px;
 }
 
@@ -119,20 +121,43 @@ body {
     display: flex;
 }
 #menu-medicines:checked ~ .view .panel-medicines,
-#menu-nutrition:checked ~ .view .panel-nutrition {
+#menu-nutrition:checked ~ .view .panel-nutrition,
+#menu-shop:checked ~ .view .panel-shop {
     display: block;
 }
 
 #menu-home:checked ~ .menu label[for="menu-home"],
 #menu-medicines:checked ~ .menu label[for="menu-medicines"],
-#menu-nutrition:checked ~ .menu label[for="menu-nutrition"] {
+#menu-nutrition:checked ~ .menu label[for="menu-nutrition"],
+#menu-shop:checked ~ .menu label[for="menu-shop"] {
     color: var(--primary-dark);
     font-weight: 700;
 }
 
 #menu-medicines:checked ~ .menu label[for="menu-medicines"] .menu-icon,
-#menu-nutrition:checked ~ .menu label[for="menu-nutrition"] .menu-icon {
+#menu-nutrition:checked ~ .menu label[for="menu-nutrition"] .menu-icon,
+#menu-shop:checked ~ .menu label[for="menu-shop"] .menu-icon {
     filter: none;
+}
+
+.shop-empty {
+    text-align: center;
+    padding: 100px 20px 0;
+}
+.shop-empty-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+}
+.shop-empty-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 8px;
+}
+.shop-empty-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
 }
 
 /* 헤더 */
@@ -169,11 +194,13 @@ body {
     padding: 24px 0;
 }
 
-#menu-nutrition:checked ~ .header .calendar-card {
+#menu-nutrition:checked ~ .header .calendar-card,
+#menu-shop:checked ~ .header .calendar-card {
     display: none;
 }
 
-#menu-nutrition:checked ~ .header {
+#menu-nutrition:checked ~ .header,
+#menu-shop:checked ~ .header {
     padding-bottom: 14px;
 }
 
@@ -242,7 +269,7 @@ body {
     min-height: 0;
     overflow-y: auto;
     scrollbar-width: none;
-    padding-bottom: 70px;
+    padding-bottom: 100px;
 }
 
 .view::-webkit-scrollbar {
@@ -416,7 +443,7 @@ body {
     min-height: 0;
     overflow-y: auto;
     scrollbar-width: none;
-    padding: 0 20px 100px;
+    padding: 0 20px 130px;
 }
 .home-scroll::-webkit-scrollbar{
     display: none;
@@ -1483,15 +1510,17 @@ body {
     margin-top: 4px;
 }
 
-/* 하단 메뉴 */
+/* 하단 메뉴 — 화면 가장자리에 붙지 않고 카드처럼 떠 있는 형태 */
 nav.menu {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
     height: 70px;
-    background: var(--card);
-    border-top: 1px solid var(--border);
+    background: #fff;
+    border-radius: 28px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.15);
     display: flex;
     align-items: center;
     z-index: 15;
@@ -1546,7 +1575,7 @@ label.menu {
 .fab {
     position: absolute;
     right: 20px;
-    bottom: 82px;
+    bottom: 98px;
     width: 52px;
     height: 52px;
     border-radius: 50%;
