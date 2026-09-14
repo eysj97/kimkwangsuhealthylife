@@ -1273,7 +1273,7 @@ body {
 }
 
 .badge-amount {
-    color: var(--primary-dark);
+    color: #fff;
 }
 
 .detail-category-badge.no-amount {
