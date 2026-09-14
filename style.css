@@ -348,13 +348,6 @@ body {
     margin-top: 4px;
 }
 
-.section-note {
-    font-size: 11px;
-    color: var(--text-muted);
-    line-height: 1.5;
-    margin: -4px 0 10px;
-}
-
 
 /* 공통 카드 */
 .card {
@@ -1774,7 +1767,6 @@ label.menu {
     .calendar-day { font-size: calc(16px + 2px); }
     .calendar-date-caption { font-size: calc(18px + 2px); }
     .section-title { font-size: calc(15px + 2px); }
-    .section-note { font-size: calc(11px + 2px); }
     .lineBasic p { font-size: calc(10px + 2px); }
     .push-permission-sheet .push-permission-icon { font-size: calc(32px + 2px); }
     .push-permission-sheet h3 { font-size: calc(17px + 2px); }
