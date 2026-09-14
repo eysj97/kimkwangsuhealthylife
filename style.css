@@ -147,11 +147,15 @@ body {
 #menu-nutrition:checked ~ .menu label[for="menu-nutrition"] .menu-label-text,
 #menu-shop:checked ~ .menu label[for="menu-shop"] .menu-label-text {
     display: inline;
+    font-size: 15px;
 }
 
 /* icon-cart.png 원본이 검정색이라 다른 아이콘(진한 초록)과 톤이 안 맞아서,
-   filter 대신 mask로 도형만 가져와 원하는 색을 직접 입힘 */
-.icon-cart-mask {
+   filter 대신 mask로 도형만 가져와 원하는 색을 직접 입힘.
+   .menu-icon 기본 규칙(파일 뒤쪽에서 filter:grayscale(1) brightness(1.9)를 다시
+   걸어서 회색이 거의 흰색으로 날아가 안 보이던 문제가 있어, 그보다 확실히 이기도록
+   .menu-icon.icon-cart-mask로 우선순위를 올림) */
+.menu-icon.icon-cart-mask {
     display: inline-block;
     filter: none;
     background-color: var(--text-muted);
@@ -1737,6 +1741,7 @@ label.menu {
     .nutrient-gap-name { font-size: calc(14px + 2px); }
     .nutrient-gap-hint { font-size: calc(12px + 2px); }
     label.menu { font-size: calc(11px + 2px); }
+    .menu-label-text { font-size: calc(15px + 2px); }
     .nav-fab { font-size: calc(28px + 2px); }
     .nutrient-info-sheet h3 { font-size: calc(17px + 2px); }
     .nutrient-info-sheet p { font-size: calc(13px + 2px); }
