@@ -1940,13 +1940,22 @@
         { pdNo: "939986472", name: "올비텐 비타팡팡 30포", tag: "키즈", price: 5000, rating: "4.9", reviews: "104", image: "https://cdn.daisomall.co.kr/file/resize/PD/20260310/banner/300/G3FoDs3n7cYqsOkiYbDR939986472_00_01G3FoDs3n7cYqsOkiYbDR.jpg", url: "https://www.daisomall.co.kr/pd/pdr/SCR_PDR_0001?pdNo=939986472" },
     ];
 
-    function renderStoreGrid(activeTag, keyword) {
+    const STORE_PAGE_SIZE = 9;
+
+    function renderStoreGrid(activeTag, keyword, page) {
         const grid = document.getElementById("store-grid");
+        const pager = document.getElementById("store-pager");
         if (!grid) return;
         const kw = (keyword || "").trim().toLowerCase();
-        const items = STORE_PRODUCTS.filter(
+        const filtered = STORE_PRODUCTS.filter(
             (p) => (activeTag === "전체" || p.tag === activeTag) && p.name.toLowerCase().includes(kw)
         );
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / STORE_PAGE_SIZE));
+        const curPage = Math.min(Math.max(1, page || 1), totalPages);
+        const start = (curPage - 1) * STORE_PAGE_SIZE;
+        const items = filtered.slice(start, start + STORE_PAGE_SIZE);
+
         grid.innerHTML =
             items
                 .map(
@@ -1962,6 +1971,21 @@
         grid.querySelectorAll(".store-card").forEach((card) => {
             card.addEventListener("click", () => openStoreDetail(card.dataset.id));
         });
+
+        if (pager) {
+            pager.innerHTML =
+                totalPages <= 1
+                    ? ""
+                    : Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .map((n) => `<button type="button" class="store-page-btn${n === curPage ? " active" : ""}" data-page="${n}">${n}</button>`)
+                          .join("");
+            pager.querySelectorAll(".store-page-btn").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    renderStoreGrid(activeTag, keyword, Number(btn.dataset.page));
+                    grid.scrollIntoView({ behavior: "smooth", block: "start" });
+                });
+            });
+        }
     }
 
     function openStoreDetail(pdNo) {
@@ -2010,13 +2034,13 @@
                 tabsEl.querySelectorAll(".store-tab").forEach((t) => t.classList.remove("active"));
                 tab.classList.add("active");
                 activeTag = tab.dataset.tag;
-                renderStoreGrid(activeTag, searchEl.value);
+                renderStoreGrid(activeTag, searchEl.value, 1);
             });
         });
 
-        searchEl.addEventListener("input", () => renderStoreGrid(activeTag, searchEl.value));
+        searchEl.addEventListener("input", () => renderStoreGrid(activeTag, searchEl.value, 1));
 
-        renderStoreGrid(activeTag, "");
+        renderStoreGrid(activeTag, "", 1);
     }
 
     function init() {
