@@ -6,6 +6,9 @@
 const REDIS_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 const QSTASH_TOKEN = process.env.QSTASH_TOKEN;
+// Vercel 마켓플레이스로 만든 QStash 계정은 특정 리전에 묶여 있어서, 고정된
+// 글로벌 주소(qstash.upstash.io) 대신 QSTASH_URL(리전에 맞는 주소)을 써야 함
+const QSTASH_URL = process.env.QSTASH_URL || "https://qstash.upstash.io";
 
 async function redisCommand(args) {
     if (!REDIS_URL || !REDIS_TOKEN) {
@@ -51,7 +54,7 @@ async function qstashRequest(path, options = {}) {
     if (!QSTASH_TOKEN) {
         throw new Error("QSTASH_TOKEN 환경변수가 설정되지 않았어요.");
     }
-    const res = await fetch(`https://qstash.upstash.io${path}`, {
+    const res = await fetch(`${QSTASH_URL}${path}`, {
         ...options,
         headers: {
             Authorization: `Bearer ${QSTASH_TOKEN}`,
