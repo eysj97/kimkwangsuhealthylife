@@ -231,7 +231,7 @@ body {
 .store-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    gap: 18px;
     margin-bottom: 16px;
 }
 .store-card {
@@ -258,20 +258,21 @@ body {
 }
 .store-card-name {
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    padding: 8px 16px;
+    padding: 8px 10px;
     font-size: 11px;
     font-weight: 700;
     color: var(--text);
-    min-height: 28px;
+    line-height: 1.4;
+    min-height: 62px;
     margin-bottom: 4px;
 }
 .store-card-price {
     display: block;
-    padding: 0 16px;
+    padding: 0 10px;
     font-size: 12px;
     font-weight: 800;
     color: var(--primary-dark);
