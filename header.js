@@ -10,11 +10,22 @@
     // 카카오톡 등 인앱 브라우저는 자기 UI(주소창/하단 바)가 자리잡는 타이밍이
     // 늦어서 처음 잰 값이 최종 값과 다를 수 있어, visualViewport를 우선 쓰고
     // 로드 직후 한동안은 반복해서 다시 재는 방식으로 보정함
+    const isStandalone = () =>
+        window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+
     function getRealViewportHeight() {
-        // 여러 방법으로 잰 값 중 가장 작은 값을 씀 - 실제보다 크게 재면(일부 인앱
-        // 브라우저/웹뷰에서 발생) 세로 기준으로 확대되면서 하단 네비 아래에
-        // 빈 공간이 남는 문제가 생기는데, 작은 값을 쓰면 그 반대(약간 덜 채움)라
-        // 배경색으로 자연스럽게 가릴 수 있는 안전한 쪽으로 치우침
+        // 실기기 디버그로 확인된 사실: 홈 화면 아이콘(standalone) 모드는 기기에 따라
+        // innerHeight/visualViewport/100dvh가 전부 실제 화면보다 작게(하단 홈 인디케이터
+        // 영역만큼) 보고되고, 이건 타이밍 문제가 아니라 그 값 자체가 그렇게 나오는
+        // 것이라 dvh를 믿어도 소용없음. screen.height는 이런 뷰포트 계산과 무관하게
+        // 기기의 실제 화면 크기를 알려주므로 standalone에서는 이 값을 그대로 씀
+        if (isStandalone() && typeof screen === "object" && screen && screen.height > 0 && screen.width > 0) {
+            return Math.max(screen.width, screen.height);
+        }
+        // 일반 브라우저 탭/인앱 브라우저는 여러 방법으로 잰 값 중 가장 작은 값을 씀 -
+        // 실제보다 크게 재면(일부 인앱 브라우저/웹뷰에서 발생) 세로 기준으로 확대되면서
+        // 하단 네비 아래에 빈 공간이 남는 문제가 생기는데, 작은 값을 쓰면 그 반대(약간
+        // 덜 채움)라 배경색으로 자연스럽게 가릴 수 있는 안전한 쪽으로 치우침
         const candidates = [
             window.visualViewport && window.visualViewport.height,
             window.innerHeight,
@@ -23,15 +34,13 @@
         return candidates.length ? Math.min(...candidates) : 800;
     }
 
-    // 100dvh를 지원하는 브라우저(iOS 15.4+ 등 요즘 거의 전부)는 홈 화면 아이콘으로
-    // 실행한 standalone 모드까지 포함해서 실제 화면 높이를 브라우저가 직접 정확히
-    // 계산해주므로, 그걸 그대로 믿는 게 JS로 잰 값(타이밍에 따라 실제보다 작게
-    // 측정되어 네비 아래 빈 공간이 생기는 원인이 됨)보다 더 정확함. dvh를 지원하면
-    // --vh100을 아예 덮어쓰지 않고 CSS의 100dvh 기본값이 쓰이게 둠.
+    // 100dvh를 지원하는 브라우저(iOS 15.4+ 등 요즘 거의 전부)는 일반 브라우저 탭에서는
+    // 실제 화면 높이를 정확히 계산해주므로 그걸 그대로 믿는 게 더 정확하지만, standalone
+    // 모드는 위 버그가 있는 기기가 있어 그 경우엔 항상 JS로 직접 재서 덮어씀.
     const supportsDvh = window.CSS && CSS.supports && CSS.supports("height", "100dvh");
 
     function updateViewportHeightVar() {
-        if (supportsDvh) return;
+        if (supportsDvh && !isStandalone()) return;
         document.documentElement.style.setProperty("--vh100", getRealViewportHeight() + "px");
     }
     updateViewportHeightVar();
