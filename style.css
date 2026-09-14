@@ -271,7 +271,7 @@ body {
 }
 .store-card-price {
     display: block;
-    padding: 0 8px;
+    padding: 0 16px;
     font-size: 12px;
     font-weight: 800;
     color: var(--primary-dark);
