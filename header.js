@@ -1339,6 +1339,15 @@
         return labels.map((label, i) => ({ label, amount: amounts[i] || "" }));
     }
 
+    // 캡슐 그래프(홈 탭 + 건강상태 탭 인라인 그래프)는 "오늘 체크한 항목들의 %RDA"를
+    // 그대로 보여줘야 체크할 때마다 바로 채워지는 느낌이 나서, 여기서는 원래 percent를
+    // 그대로 씀. "이번달 복용율" 쪽 계산은 refreshNutritionAnalysis에서 따로 월 일수로
+    // 나눠서 별도로 처리함(하루 체크만으로 월간 그래프가 100%를 넘지 않게 하기 위함)
+    function daysInCurrentMonth() {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    }
+
     function applyNutrientIntake(categoryStr, percentStr, add) {
         parseNutrientList(categoryStr, percentStr).forEach(({ label, percent }) => {
             if (!percent) return;
@@ -1361,10 +1370,15 @@
         let total = 0;
         const overItems = [];
         const lowItems = [];
+        const monthDays = daysInCurrentMonth();
 
         NUTRIENT_SOURCES.forEach((nu) => {
             const fillEl = document.querySelector(`.nutrient-fill.${nu.key}`);
-            const pct = fillEl ? parseFloat(fillEl.style.height) || 0 : 0;
+            const dailyPct = fillEl ? parseFloat(fillEl.style.height) || 0 : 0;
+            // 하루치 %RDA(dailyPct)를 그대로 쓰면 하루만 체크해도 월간 그래프가 100%를
+            // 넘어버리므로, 이번 달 일수로 나눠서 "이번 달 전체 필요량 중 며칠치를
+            // 채웠는지"로 환산함
+            const pct = dailyPct / monthDays;
             total += pct;
 
             const box = grid.querySelector(`[data-nutrient-key="${nu.key}"]`);
