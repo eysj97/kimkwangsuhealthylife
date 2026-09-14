@@ -1634,8 +1634,9 @@ label.menu {
 .nav-fab-option {
     position: absolute;
     top: -30px;
-    width: 48px;
-    height: 48px;
+    left: 50%;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: #fff;
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
@@ -1651,23 +1652,22 @@ label.menu {
 }
 
 .nav-fab-option img {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     object-fit: contain;
 }
 
-.nav-fab-option#nav-fab-scan {
-    left: -24px;
-}
-
-.nav-fab-option#nav-fab-search {
-    left: 84px;
-}
-
-.nav-fab-wrap.open .nav-fab-option {
+/* X 버튼 위로 세로 일렬로 쌓임: 가까운 것부터 scan, 그 위에 search */
+.nav-fab-wrap.open #nav-fab-scan {
     opacity: 1;
     pointer-events: auto;
-    transform: translate(-50%, -54px) scale(1);
+    transform: translate(-50%, -74px) scale(1);
+}
+
+.nav-fab-wrap.open #nav-fab-search {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -148px) scale(1);
 }
 
 /* 영양소 캡슐 클릭 시 뜨는 설명 팝업 */
