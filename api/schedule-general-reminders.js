@@ -35,7 +35,9 @@ module.exports = async (req, res) => {
             const hourUtc = (Number(hour) - 9 + 24) % 24;
             const cron = `${Number(minute)} ${hourUtc} * * *`;
 
-            const result = await qstashRequest(`/v2/schedules/${encodeURIComponent(destination)}`, {
+            // QStash는 destination을 퍼센트 인코딩 없이 경로에 그대로 붙이길 기대함
+            // (encodeURIComponent를 쓰면 "invalid scheme" 오류로 거부됨)
+            const result = await qstashRequest(`/v2/schedules/${destination}`, {
                 method: "POST",
                 headers: { "Upstash-Cron": cron },
                 body: JSON.stringify({ userId, groupIndex }),
