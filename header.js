@@ -1860,7 +1860,7 @@
             name: "대웅제약 멀티비타민 미네랄 30정",
             tag: "멀티비타민",
             price: 5000,
-            emoji: "💊",
+            image: "https://cdn.daisomall.co.kr/file/resize/PD/20250408/banner/300/2ijoJLmHVT94XXIOZnda600000135_00_002ijoJLmHVT94XXIOZnda.png",
             color: "#498058",
             desc: "여러 비타민과 미네랄을 한 번에 보충할 수 있는 기초 건강 제품이에요. 30일분으로 하루 한 정씩 먹기 좋아요.",
             url: "https://www.daisomall.co.kr/pd/pdr/SCR_PDR_0001?pdNo=600000135",
@@ -1870,7 +1870,7 @@
             name: "대웅제약 칼슘 마그네슘 비타민D 60정",
             tag: "마그네슘",
             price: 5000,
-            emoji: "🦴",
+            image: "https://cdn.daisomall.co.kr/file/resize/PD/20250408/banner/300/a7ohwSe3ShJimhwztOOK600000148_00_00a7ohwSe3ShJimhwztOOK.png",
             color: "#A3CA60",
             desc: "칼슘·마그네슘은 뼈와 근육 건강에, 비타민D는 칼슘 흡수에 도움을 줘요. 30일분(하루 2정) 구성이에요.",
             url: "https://www.daisomall.co.kr/pd/pdr/SCR_PDR_0001?pdNo=600000148",
@@ -1880,7 +1880,7 @@
             name: "대웅제약 밀크씨슬 30정",
             tag: "밀크씨슬",
             price: 5000,
-            emoji: "🌿",
+            image: "https://cdn.daisomall.co.kr/file/resize/PD/20250408/banner/300/bzKNvkJzwy2KdAqrXtDQ600000134_00_00bzKNvkJzwy2KdAqrXtDQ.png",
             color: "#053D20",
             desc: "밀크씨슬(실리마린)은 간 세포를 보호하고 간 기능 회복에 도움을 줄 수 있어요.",
             url: "https://www.daisomall.co.kr/pd/pdr/SCR_PDR_0001?pdNo=600000134",
@@ -1890,7 +1890,7 @@
             name: "대웅제약 rTG 오메가3 30캡슐",
             tag: "오메가3",
             price: 5000,
-            emoji: "🐟",
+            image: "https://cdn.daisomall.co.kr/file/resize/PD/20250408/banner/300/OHEcumxqCcJ047eosRhh600000145_00_00OHEcumxqCcJ047eosRhh.png",
             color: "#2f6b46",
             desc: "혈중 중성지방을 줄이고 혈행 개선에 도움을 줄 수 있는, 흡수율 높은 rTG 형태 오메가3예요.",
             url: "https://www.daisomall.co.kr/pd/pdr/SCR_PDR_0001?pdNo=600000145",
@@ -1909,7 +1909,7 @@
                 .map(
                     (p) => `
             <button type="button" class="store-card" data-id="${p.id}">
-                <span class="store-card-img" style="background:${p.color}">${p.emoji}</span>
+                <span class="store-card-img" style="background:${p.color}"><img src="${p.image}" alt=""></span>
                 <span class="store-card-name">${escapeHtml(p.name)}</span>
                 <span class="store-card-price">${p.price.toLocaleString()}원</span>
             </button>`
@@ -1932,7 +1932,7 @@
         overlay.innerHTML = `
             <div class="detail-hero" style="background:${p.color}">
                 <button type="button" class="detail-icon-btn detail-back" data-close><img class="detail-back-icon" src="images/icon-return.png" alt="뒤로"></button>
-                <span class="detail-hero-placeholder">${p.emoji}</span>
+                <img class="detail-hero-image store-detail-hero-image" src="${p.image}" alt="${escapeHtml(p.name)}">
             </div>
             <div class="detail-body">
                 <h2 class="detail-view-name">${escapeHtml(p.name)}</h2>

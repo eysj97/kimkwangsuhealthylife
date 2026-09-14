@@ -246,8 +246,13 @@ body {
     align-items: center;
     justify-content: center;
     aspect-ratio: 1 / 1;
-    font-size: 40px;
     margin-bottom: 8px;
+    padding: 14px;
+}
+.store-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 .store-card-name {
     display: -webkit-box;
@@ -1154,6 +1159,18 @@ body {
     max-width: none;
     max-height: none;
     border-radius: 0;
+}
+
+/* 스토어 상품 이미지는 사용자가 찍은 사진이 아니라 다이소몰의 제품 컷이라,
+   꽉 채우기보다 가운데 정렬로 온전히 다 보이게 함 */
+.store-detail-hero-image {
+    width: 70%;
+    height: 70%;
+    max-width: 260px;
+    max-height: 260px;
+    object-fit: contain;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .detail-icon-btn {
