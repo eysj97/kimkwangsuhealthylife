@@ -1339,10 +1339,13 @@
         return labels.map((label, i) => ({ label, amount: amounts[i] || "" }));
     }
 
-    // 캡슐 그래프(홈 탭 + 건강상태 탭 인라인 그래프)는 "오늘 체크한 항목들의 %RDA"를
-    // 그대로 보여줘야 체크할 때마다 바로 채워지는 느낌이 나서, 여기서는 원래 percent를
-    // 그대로 씀. "이번달 복용율" 쪽 계산은 refreshNutritionAnalysis에서 따로 월 일수로
-    // 나눠서 별도로 처리함(하루 체크만으로 월간 그래프가 100%를 넘지 않게 하기 위함)
+    // 홈 탭 캡슐 그래프는 "오늘 체크한 항목들의 %RDA"를 그대로 보여줘야 체크할 때마다
+    // 바로 채워지는 느낌이 나서 원래 percent를 그대로 씀. 건강상태 탭 위쪽의 인라인
+    // 그래프는 일주일(월~일) 치 기준이라 percent를 7로 나눠서 하루 체크만으로
+    // 주간 그래프가 100%를 넘지 않게 함. "이번달 복용율" 쪽은 refreshNutritionAnalysis에서
+    // 따로 월 일수로 나눠서 처리함
+    const WEEK_DAYS = 7;
+
     function daysInCurrentMonth() {
         const now = new Date();
         return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -1353,10 +1356,16 @@
             if (!percent) return;
             const source = NUTRIENT_SOURCES.find((nu) => nu.label === label);
             if (!source) return;
-            document.querySelectorAll(`.nutrient-fill.${source.key}`).forEach((fillEl) => {
+            const signedDaily = add ? percent : -percent;
+            const signedWeekly = signedDaily / WEEK_DAYS;
+
+            document.querySelectorAll(`.boxGrap:not(.boxGrap-inline) .nutrient-fill.${source.key}`).forEach((fillEl) => {
                 const current = parseFloat(fillEl.style.height) || 0;
-                const next = Math.max(0, current + (add ? percent : -percent));
-                fillEl.style.height = `${next}%`;
+                fillEl.style.height = `${Math.max(0, current + signedDaily)}%`;
+            });
+            document.querySelectorAll(`.boxGrap-inline .nutrient-fill.${source.key}`).forEach((fillEl) => {
+                const current = parseFloat(fillEl.style.height) || 0;
+                fillEl.style.height = `${Math.max(0, current + signedWeekly)}%`;
             });
         });
         refreshNutritionAnalysis();
@@ -1373,7 +1382,9 @@
         const monthDays = daysInCurrentMonth();
 
         NUTRIENT_SOURCES.forEach((nu) => {
-            const fillEl = document.querySelector(`.nutrient-fill.${nu.key}`);
+            // 월간 계산은 하루치 원본 값이 필요하므로 7일 기준으로 이미 나뉜 인라인
+            // 그래프가 아니라 홈 탭의 원본 캡슐 그래프 값을 기준으로 함
+            const fillEl = document.querySelector(`.boxGrap:not(.boxGrap-inline) .nutrient-fill.${nu.key}`);
             const dailyPct = fillEl ? parseFloat(fillEl.style.height) || 0 : 0;
             // 하루치 %RDA(dailyPct)를 그대로 쓰면 하루만 체크해도 월간 그래프가 100%를
             // 넘어버리므로, 이번 달 일수로 나눠서 "이번 달 전체 필요량 중 며칠치를
