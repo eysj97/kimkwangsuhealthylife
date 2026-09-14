@@ -1593,9 +1593,19 @@ label.menu {
     display: none;
 }
 
-/* 네비 중앙의 추가 버튼 — 탭이 아니라 항상 위로 떠 있는 액션 버튼 */
-.nav-fab {
+/* 네비 중앙의 추가 버튼 — 탭이 아니라 항상 위로 떠 있는 액션 버튼.
+   누르면 +가 X로 회전하면서 위로 스캔/검색 두 개의 보조 버튼이 펼쳐짐 */
+.nav-fab-wrap {
+    position: relative;
     flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-fab {
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -1609,6 +1619,55 @@ label.menu {
     margin-top: -30px;
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
     cursor: pointer;
+    z-index: 2;
+}
+
+.nav-fab-icon {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.nav-fab-wrap.open .nav-fab-icon {
+    transform: rotate(45deg);
+}
+
+.nav-fab-option {
+    position: absolute;
+    top: -30px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 10px) scale(0.6);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    z-index: 1;
+}
+
+.nav-fab-option img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.nav-fab-option#nav-fab-scan {
+    left: -24px;
+}
+
+.nav-fab-option#nav-fab-search {
+    left: 84px;
+}
+
+.nav-fab-wrap.open .nav-fab-option {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -54px) scale(1);
 }
 
 /* 영양소 캡슐 클릭 시 뜨는 설명 팝업 */

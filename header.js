@@ -1814,17 +1814,34 @@
         wireWeekNav();
         refreshNutritionAnalysis();
 
-        // 네비 중앙의 + 버튼은 탭마다 다른 동작을 함: 영양제 탭에서는 새 영양제 등록,
-        // 그 외(홈 포함)에서는 오늘 먹을 영양제 추가
+        // 네비 중앙의 + 버튼: 누르면 X로 바뀌면서 위로 스캔(제품 사진 등록)/검색(오늘
+        // 먹을 영양제 추가) 두 보조 버튼이 펼쳐짐. 다시 누르거나 바깥을 누르면 접힘
+        const navFabWrap = document.getElementById("nav-fab-wrap");
         const navFabBtn = document.getElementById("nav-fab-btn");
-        if (navFabBtn) {
-            navFabBtn.addEventListener("click", () => {
-                const medicinesTabActive = document.getElementById("menu-medicines").checked;
-                if (medicinesTabActive) {
+        const navFabScan = document.getElementById("nav-fab-scan");
+        const navFabSearch = document.getElementById("nav-fab-search");
+        if (navFabWrap && navFabBtn) {
+            const closeFabMenu = () => navFabWrap.classList.remove("open");
+            navFabBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                navFabWrap.classList.toggle("open");
+            });
+            if (navFabScan) {
+                navFabScan.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    closeFabMenu();
                     openCaptureOverlay();
-                } else {
+                });
+            }
+            if (navFabSearch) {
+                navFabSearch.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    closeFabMenu();
                     openTodayPickerOverlay();
-                }
+                });
+            }
+            document.addEventListener("click", (e) => {
+                if (!navFabWrap.contains(e.target)) closeFabMenu();
             });
         }
 
