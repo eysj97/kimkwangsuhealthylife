@@ -39,8 +39,7 @@ module.exports = async (req, res) => {
             return;
         }
 
-        const proto = req.headers["x-forwarded-proto"] || "https";
-        const origin = `${proto}://${req.headers.host}`;
+        const origin = `https://${req.headers.host}`;
 
         const group = WAITING_IMAGE_GROUPS[groupIndex] || WAITING_IMAGE_GROUPS[0];
         const file = group[Math.floor(Math.random() * group.length)];

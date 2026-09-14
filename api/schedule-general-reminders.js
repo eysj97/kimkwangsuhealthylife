@@ -16,8 +16,10 @@ module.exports = async (req, res) => {
             return;
         }
 
-        const proto = req.headers["x-forwarded-proto"] || "https";
-        const destination = `${proto}://${req.headers.host}/api/send-push`;
+        // x-forwarded-proto가 프록시 체인에 따라 "https, http"처럼 콤마로 여러 값이
+        // 붙어 오는 경우가 있어 QStash가 "invalid scheme"으로 거부했음. 이 앱은 항상
+        // https로만 서비스되므로 헤더에 의존하지 않고 고정값을 씀
+        const destination = `https://${req.headers.host}/api/send-push`;
 
         const scheduleIds = [];
         for (let i = 0; i < times.length; i++) {
