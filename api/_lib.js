@@ -1,13 +1,15 @@
 // 여러 서버리스 함수(/api/*)가 공통으로 쓰는 Upstash Redis / QStash REST API 도우미.
 // 둘 다 REST 기반이라 별도 SDK 없이 fetch만으로 호출함.
 
-const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
-const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+// Vercel의 Upstash Redis 마켓플레이스 연동이 최근에 이름을 UPSTASH_REDIS_REST_* 대신
+// KV_REST_API_*로 바꿔서 만들어주기 때문에, 둘 다 인식하도록 함
+const REDIS_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const REDIS_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 const QSTASH_TOKEN = process.env.QSTASH_TOKEN;
 
 async function redisCommand(args) {
     if (!REDIS_URL || !REDIS_TOKEN) {
-        throw new Error("UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN 환경변수가 설정되지 않았어요.");
+        throw new Error("KV_REST_API_URL / KV_REST_API_TOKEN (또는 UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN) 환경변수가 설정되지 않았어요.");
     }
     const res = await fetch(REDIS_URL, {
         method: "POST",
