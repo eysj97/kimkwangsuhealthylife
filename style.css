@@ -150,6 +150,17 @@ body {
     font-size: 15px;
 }
 
+#menu-home:checked ~ .menu label[for="menu-home"]::after,
+#menu-medicines:checked ~ .menu label[for="menu-medicines"]::after,
+#menu-nutrition:checked ~ .menu label[for="menu-nutrition"]::after,
+#menu-shop:checked ~ .menu label[for="menu-shop"]::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--primary-dark);
+}
+
 /* icon-cart.png 원본이 검정색이라 다른 아이콘(진한 초록)과 톤이 안 맞아서,
    filter 대신 mask로 도형만 가져와 원하는 색을 직접 입힘.
    .menu-icon 기본 규칙(파일 뒤쪽에서 filter:grayscale(1) brightness(1.9)를 다시
