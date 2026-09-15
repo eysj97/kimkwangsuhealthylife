@@ -87,9 +87,41 @@
         backdrop.style.background = `linear-gradient(to bottom, var(--primary) 0 ${headerPct}%, var(--bg) ${headerPct}% 100%)`;
     }
 
+    // 임시 진단용: 갤럭시 폴드에서 헤더가 너무 아래에 있거나 네비가 안 보이는 문제의
+    // 원인을 찾기 위해 실제 측정값을 화면에 잠깐 표시함. 원인 파악 후 제거 예정.
+    function renderDebugOverlay() {
+        let el = document.getElementById("debug-vh-overlay");
+        if (!el) {
+            el = document.createElement("div");
+            el.id = "debug-vh-overlay";
+            el.style.cssText =
+                "position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,0.85);" +
+                "color:#0f0;font-size:10px;font-family:monospace;padding:6px 8px;line-height:1.5;" +
+                "white-space:pre-wrap;pointer-events:none;";
+            document.body.appendChild(el);
+        }
+        const top = document.querySelector(".top");
+        const nav = document.querySelector("nav.menu");
+        const backdrop = document.getElementById("screen-backdrop");
+        const topRect = top ? top.getBoundingClientRect() : null;
+        const navRect = nav ? nav.getBoundingClientRect() : null;
+        const backdropRect = backdrop ? backdrop.getBoundingClientRect() : null;
+        const foldMatch = window.matchMedia("(min-aspect-ratio: 3/4)").matches;
+        const lines = [
+            `standalone=${isStandalone()} dpr=${window.devicePixelRatio} foldMediaQuery=${foldMatch}`,
+            `innerWH=${window.innerWidth}x${window.innerHeight} clientWH=${document.documentElement.clientWidth}x${document.documentElement.clientHeight}`,
+            `visualViewport=${window.visualViewport ? window.visualViewport.width + "x" + window.visualViewport.height : "N/A"} screen=${screen.width}x${screen.height}`,
+            `supportsDvh=${supportsDvh} --vh100=${getComputedStyle(document.documentElement).getPropertyValue("--vh100")}`,
+            `.top rect=${topRect ? Math.round(topRect.width) + "x" + Math.round(topRect.height) + " top=" + Math.round(topRect.top) + " bottom=" + Math.round(topRect.bottom) : "N/A"}`,
+            `nav top=${navRect ? Math.round(navRect.top) : "N/A"} bottom=${navRect ? Math.round(navRect.bottom) : "N/A"} backdrop=${backdropRect ? Math.round(backdropRect.width) + "x" + Math.round(backdropRect.height) : "N/A"}`,
+        ];
+        el.textContent = lines.join("\n");
+    }
+
     function refreshViewportSizing() {
         updateViewportHeightVar();
         updateScreenBackdrop();
+        renderDebugOverlay();
     }
     window.addEventListener("load", refreshViewportSizing);
     window.addEventListener("resize", refreshViewportSizing);
