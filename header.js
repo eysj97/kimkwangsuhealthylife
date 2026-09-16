@@ -10,16 +10,22 @@
     // 카카오톡 등 인앱 브라우저는 자기 UI(주소창/하단 바)가 자리잡는 타이밍이
     // 늦어서 처음 잰 값이 최종 값과 다를 수 있어, visualViewport를 우선 쓰고
     // 로드 직후 한동안은 반복해서 다시 재는 방식으로 보정함
-    const isStandalone = () =>
-        window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    // navigator.standalone은 iOS Safari에만 있는 값이라 iOS standalone만 정확히
+    // 구분해낼 수 있음. display-mode:standalone은 iOS/안드로이드 둘 다 매치되므로
+    // "standalone 전체" 판별에는 쓰되, 아래 screen.height 보정(iOS 전용 버그 대응)은
+    // 반드시 iOS에서만 걸리게 분리함 — 안드로이드(예: 갤럭시 폴드)는 반대로
+    // screen.height가 실제 보이는 영역보다 더 크게 나와서(시스템 UI 포함) 이 보정을
+    // 그대로 적용하면 헤더가 아래로 밀리고 네비가 잘리는 정반대 버그가 생겼었음
+    const isIosStandalone = () => window.navigator.standalone === true;
+    const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || isIosStandalone();
 
     function getRealViewportHeight() {
-        // 실기기 디버그로 확인된 사실: 홈 화면 아이콘(standalone) 모드는 기기에 따라
-        // innerHeight/visualViewport/100dvh가 전부 실제 화면보다 작게(하단 홈 인디케이터
-        // 영역만큼) 보고되고, 이건 타이밍 문제가 아니라 그 값 자체가 그렇게 나오는
-        // 것이라 dvh를 믿어도 소용없음. screen.height는 이런 뷰포트 계산과 무관하게
-        // 기기의 실제 화면 크기를 알려주므로 standalone에서는 이 값을 그대로 씀
-        if (isStandalone() && typeof screen === "object" && screen && screen.height > 0 && screen.width > 0) {
+        // 실기기 디버그로 확인된 사실: iOS 홈 화면 아이콘(standalone) 모드는 기기에
+        // 따라 innerHeight/visualViewport/100dvh가 전부 실제 화면보다 작게(하단 홈
+        // 인디케이터 영역만큼) 보고되고, 이건 타이밍 문제가 아니라 그 값 자체가 그렇게
+        // 나오는 것이라 dvh를 믿어도 소용없음. screen.height는 이런 뷰포트 계산과
+        // 무관하게 기기의 실제 화면 크기를 알려주므로 iOS standalone에서는 이 값을 씀
+        if (isIosStandalone() && typeof screen === "object" && screen && screen.height > 0 && screen.width > 0) {
             return Math.max(screen.width, screen.height);
         }
         // 일반 브라우저 탭/인앱 브라우저는 여러 방법으로 잰 값 중 가장 작은 값을 씀 -
@@ -34,13 +40,13 @@
         return candidates.length ? Math.min(...candidates) : 800;
     }
 
-    // 100dvh를 지원하는 브라우저(iOS 15.4+ 등 요즘 거의 전부)는 일반 브라우저 탭에서는
-    // 실제 화면 높이를 정확히 계산해주므로 그걸 그대로 믿는 게 더 정확하지만, standalone
-    // 모드는 위 버그가 있는 기기가 있어 그 경우엔 항상 JS로 직접 재서 덮어씀.
+    // 100dvh를 지원하는 브라우저는 실제 화면 높이를 정확히 계산해주므로 그대로 믿는 게
+    // 더 정확함. 예외는 iOS standalone뿐이라(위 버그), 그 경우에만 JS로 직접 재서 덮어씀.
+    // 안드로이드 standalone(갤럭시 폴드 등)은 dvh를 그대로 믿는 일반 경로를 탐.
     const supportsDvh = window.CSS && CSS.supports && CSS.supports("height", "100dvh");
 
     function updateViewportHeightVar() {
-        if (supportsDvh && !isStandalone()) return;
+        if (supportsDvh && !isIosStandalone()) return;
         document.documentElement.style.setProperty("--vh100", getRealViewportHeight() + "px");
     }
     updateViewportHeightVar();
