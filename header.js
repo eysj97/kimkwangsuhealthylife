@@ -11,13 +11,11 @@
     // 늦어서 처음 잰 값이 최종 값과 다를 수 있어, visualViewport를 우선 쓰고
     // 로드 직후 한동안은 반복해서 다시 재는 방식으로 보정함
     // navigator.standalone은 iOS Safari에만 있는 값이라 iOS standalone만 정확히
-    // 구분해낼 수 있음. display-mode:standalone은 iOS/안드로이드 둘 다 매치되므로
-    // "standalone 전체" 판별에는 쓰되, 아래 screen.height 보정(iOS 전용 버그 대응)은
-    // 반드시 iOS에서만 걸리게 분리함 — 안드로이드(예: 갤럭시 폴드)는 반대로
-    // screen.height가 실제 보이는 영역보다 더 크게 나와서(시스템 UI 포함) 이 보정을
-    // 그대로 적용하면 헤더가 아래로 밀리고 네비가 잘리는 정반대 버그가 생겼었음
+    // 구분해낼 수 있음. 아래 screen.height 보정(iOS 전용 버그 대응)은 반드시 iOS에서만
+    // 걸리게 함 — 안드로이드(예: 갤럭시 폴드)는 반대로 screen.height가 실제 보이는
+    // 영역보다 더 크게 나와서(시스템 UI 포함) 이 보정을 그대로 적용하면 헤더가 아래로
+    // 밀리고 네비가 잘리는 정반대 버그가 생겼었음
     const isIosStandalone = () => window.navigator.standalone === true;
-    const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || isIosStandalone();
 
     function getRealViewportHeight() {
         // 실기기 디버그로 확인된 사실: iOS 홈 화면 아이콘(standalone) 모드는 기기에
@@ -93,41 +91,9 @@
         backdrop.style.background = `linear-gradient(to bottom, var(--primary) 0 ${headerPct}%, var(--bg) ${headerPct}% 100%)`;
     }
 
-    // 임시 진단용: 갤럭시 폴드에서 헤더가 너무 아래에 있거나 네비가 안 보이는 문제의
-    // 원인을 찾기 위해 실제 측정값을 화면에 잠깐 표시함. 원인 파악 후 제거 예정.
-    function renderDebugOverlay() {
-        let el = document.getElementById("debug-vh-overlay");
-        if (!el) {
-            el = document.createElement("div");
-            el.id = "debug-vh-overlay";
-            el.style.cssText =
-                "position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,0.85);" +
-                "color:#0f0;font-size:10px;font-family:monospace;padding:6px 8px;line-height:1.5;" +
-                "white-space:pre-wrap;pointer-events:none;";
-            document.body.appendChild(el);
-        }
-        const top = document.querySelector(".top");
-        const nav = document.querySelector("nav.menu");
-        const backdrop = document.getElementById("screen-backdrop");
-        const topRect = top ? top.getBoundingClientRect() : null;
-        const navRect = nav ? nav.getBoundingClientRect() : null;
-        const backdropRect = backdrop ? backdrop.getBoundingClientRect() : null;
-        const foldMatch = window.matchMedia("(min-aspect-ratio: 3/4)").matches;
-        const lines = [
-            `standalone=${isStandalone()} dpr=${window.devicePixelRatio} foldMediaQuery=${foldMatch}`,
-            `innerWH=${window.innerWidth}x${window.innerHeight} clientWH=${document.documentElement.clientWidth}x${document.documentElement.clientHeight}`,
-            `visualViewport=${window.visualViewport ? window.visualViewport.width + "x" + window.visualViewport.height : "N/A"} screen=${screen.width}x${screen.height}`,
-            `supportsDvh=${supportsDvh} --vh100=${getComputedStyle(document.documentElement).getPropertyValue("--vh100")}`,
-            `.top rect=${topRect ? Math.round(topRect.width) + "x" + Math.round(topRect.height) + " top=" + Math.round(topRect.top) + " bottom=" + Math.round(topRect.bottom) : "N/A"}`,
-            `nav top=${navRect ? Math.round(navRect.top) : "N/A"} bottom=${navRect ? Math.round(navRect.bottom) : "N/A"} backdrop=${backdropRect ? Math.round(backdropRect.width) + "x" + Math.round(backdropRect.height) : "N/A"}`,
-        ];
-        el.textContent = lines.join("\n");
-    }
-
     function refreshViewportSizing() {
         updateViewportHeightVar();
         updateScreenBackdrop();
-        renderDebugOverlay();
     }
     window.addEventListener("load", refreshViewportSizing);
     window.addEventListener("resize", refreshViewportSizing);
